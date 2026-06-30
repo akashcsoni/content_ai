@@ -9,8 +9,9 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'https://webbywrites.webbydemo.in',
         changeOrigin: true,
+        secure: true,
       },
     },
   },
