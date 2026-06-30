@@ -231,6 +231,7 @@ export default function AutoBlogPostPreview({
       metaDescription: 'metaDescription',
       slug: 'slug',
       content: null,
+      internalLinks: null,
     }
 
     const copyKey = copyKeyMap[field.id]
