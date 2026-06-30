@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import SEO from '../components/SEO'
-import { blogListJsonLd, breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
+import { blogListJsonLd } from '../config/seo'
 import { siteConfig } from '../config/site'
 import { blogApi, type PublicBlogPostSummary } from '../lib/api'
 import '../styles/blog.css'
@@ -16,7 +16,6 @@ function formatDate(value: string | null): string {
 }
 
 export default function BlogPage() {
-  const seo = pageSeo.blog
   const [posts, setPosts] = useState<PublicBlogPostSummary[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -47,26 +46,16 @@ export default function BlogPage() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={[
-          breadcrumbJsonLd([
-            { name: 'Home', path: '/' },
-            { name: 'Blog', path: '/blog' },
-          ]),
-          blogListJsonLd(
-            posts.map((post) => ({
-              title: post.title,
-              path: `/blog/${post.slug}`,
-            })),
-          ),
-        ]}
-      />
-
+    <ManagedPageContent
+      pageKey="blog"
+      jsonLd={blogListJsonLd(
+        posts.map((post) => ({
+          title: post.title,
+          path: `/blog/${post.slug}`,
+        })),
+      )}
+      replace
+    >
       <div className="blog-page">
         <section className="blog-hero" aria-labelledby="blog-heading">
           <div className="blog-container">
@@ -155,6 +144,6 @@ export default function BlogPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

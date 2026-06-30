@@ -5,6 +5,7 @@ import { faArrowRight, faBars, faCoins, faXmark } from '@fortawesome/free-solid-
 import { useAuth } from '../context/AuthContext'
 import { siteConfig } from '../config/site'
 import BrandIcon from './BrandIcon'
+import AccountHeaderNav from './AccountHeaderNav'
 import '../styles/header.css'
 
 const websiteNavItems = [
@@ -17,14 +18,6 @@ const websiteNavItems = [
   { to: '/contact', label: 'Contact' },
 ]
 
-const accountNavItems = [
-  { to: '/account', label: 'Dashboard', end: true },
-  { to: '/account/billing', label: 'Billing' },
-  { to: '/account/usage', label: 'Usage' },
-  { to: '/account/support', label: 'Support' },
-  { to: '/account/settings', label: 'Settings' },
-]
-
 function isAccountRoute(pathname: string): boolean {
   return pathname === '/account' || pathname.startsWith('/account/')
 }
@@ -35,7 +28,6 @@ export default function Header() {
   const location = useLocation()
   const { isAuthenticated, user, signOut } = useAuth()
   const onAccount = isAccountRoute(location.pathname)
-  const navItems = onAccount ? accountNavItems : websiteNavItems
   const logoTo = onAccount ? '/account' : '/'
 
   useEffect(() => {
@@ -87,29 +79,29 @@ export default function Header() {
       <div className="header-main">
         <div className="header-container header-main-inner">
           <NavLink to={logoTo} className="header-logo" aria-label={`${siteConfig.name} ${onAccount ? 'account' : 'home'}`}>
-            <BrandIcon size="sm" className="logo-icon" />
-            <span className="header-logo-text">
-              <strong>{siteConfig.name}</strong>
-              <small>{siteConfig.tagline}</small>
-            </span>
+            <BrandIcon size="header" className="logo-icon" />
           </NavLink>
 
           <nav className="header-nav" aria-label={onAccount ? 'Account navigation' : 'Main navigation'}>
-            <ul className="header-nav-list">
-              {navItems.map(({ to, label, end }) => (
-                <li key={to}>
-                  <NavLink
-                    to={to}
-                    end={end}
-                    className={({ isActive }) =>
-                      isActive ? 'header-nav-link active' : 'header-nav-link'
-                    }
-                  >
-                    {label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+            {onAccount ? (
+              <AccountHeaderNav variant="desktop" />
+            ) : (
+              <ul className="header-nav-list">
+                {websiteNavItems.map(({ to, label, end }) => (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={end}
+                      className={({ isActive }) =>
+                        isActive ? 'header-nav-link active' : 'header-nav-link'
+                      }
+                    >
+                      {label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
           </nav>
 
           <div className="header-actions">
@@ -171,10 +163,7 @@ export default function Header() {
         <div className="header-mobile-panel">
           <div className="header-mobile-head">
             <NavLink to={logoTo} className="header-logo" onClick={() => setMenuOpen(false)}>
-              <BrandIcon size="sm" className="logo-icon" />
-              <span className="header-logo-text">
-                <strong>{siteConfig.name}</strong>
-              </span>
+              <BrandIcon size="header" className="logo-icon" />
             </NavLink>
             <button
               type="button"
@@ -187,22 +176,26 @@ export default function Header() {
           </div>
 
           <nav className="header-mobile-nav" aria-label={onAccount ? 'Account navigation' : 'Mobile navigation'}>
-            <ul>
-              {navItems.map(({ to, label, end }) => (
-                <li key={to}>
-                  <NavLink
-                    to={to}
-                    end={end}
-                    className={({ isActive }) =>
-                      isActive ? 'header-mobile-link active' : 'header-mobile-link'
-                    }
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+            {onAccount ? (
+              <AccountHeaderNav variant="mobile" onNavigate={() => setMenuOpen(false)} />
+            ) : (
+              <ul>
+                {websiteNavItems.map(({ to, label, end }) => (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={end}
+                      className={({ isActive }) =>
+                        isActive ? 'header-mobile-link active' : 'header-mobile-link'
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {label}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            )}
           </nav>
 
           <div className="header-mobile-actions">

@@ -3,7 +3,7 @@ import type { AutoBlogPostDetail } from '../../../../lib/api'
 export type SeoScoreStatus = 'good' | 'warning' | 'poor' | 'missing'
 
 export type SeoFieldScore = {
-  id: 'focusKeyword' | 'seoTitle' | 'metaDescription' | 'slug' | 'content'
+  id: 'focusKeyword' | 'seoTitle' | 'metaDescription' | 'slug' | 'content' | 'internalLinks'
   label: string
   score: number
   maxScore: number
@@ -250,7 +250,7 @@ function scoreMetaDescription(description: string | null | undefined, keyword: s
 }
 
 function scoreContent(post: AutoBlogPostDetail, keyword: string): SeoFieldScore {
-  const maxScore = 15
+  const maxScore = 10
   const plainText = stripHtml(post.content)
   const wordCount = plainText.split(/\s+/).filter(Boolean).length
   const hasHeadings = /<h2[\s>]/i.test(post.content)
@@ -264,8 +264,8 @@ function scoreContent(post: AutoBlogPostDetail, keyword: string): SeoFieldScore 
   if (keywordInContent) score += 6
 
   let status: SeoScoreStatus = 'good'
-  if (score < 10) status = 'warning'
-  if (score < 6) status = 'poor'
+  if (score < 7) status = 'warning'
+  if (score < 4) status = 'poor'
 
   return {
     id: 'content',
@@ -274,6 +274,42 @@ function scoreContent(post: AutoBlogPostDetail, keyword: string): SeoFieldScore 
     maxScore,
     status,
     detail: `${wordCount} words · ${hasHeadings ? 'has H2 sections' : 'add H2 sections'} · ${keywordInContent ? 'keyword in body' : 'keyword missing in body'}`,
+  }
+}
+
+function scoreInternalLinks(post: AutoBlogPostDetail): SeoFieldScore {
+  const maxScore = 10
+  const linkCount = post.internalLinks?.length ?? 0
+  const contentLinkCount = (post.content.match(/<a\b[^>]*href=/gi) ?? []).length
+
+  if (linkCount === 0 && contentLinkCount === 0) {
+    return {
+      id: 'internalLinks',
+      label: 'Internal links',
+      score: 0,
+      maxScore,
+      status: 'missing',
+      detail: 'No contextual internal links added yet',
+    }
+  }
+
+  const effectiveCount = Math.max(linkCount, contentLinkCount)
+  let score = 0
+  if (effectiveCount >= 1) score += 4
+  if (effectiveCount >= 2) score += 3
+  if (effectiveCount >= 3) score += 3
+
+  let status: SeoScoreStatus = 'good'
+  if (score < 7) status = 'warning'
+  if (score < 4) status = 'poor'
+
+  return {
+    id: 'internalLinks',
+    label: 'Internal links',
+    score: clampScore(score, maxScore),
+    maxScore,
+    status,
+    detail: `${effectiveCount} internal link${effectiveCount === 1 ? '' : 's'} in article`,
   }
 }
 
@@ -301,6 +337,7 @@ export function calculateSeoScore(post: AutoBlogPostDetail): SeoScoreResult {
     scoreMetaDescription(post.metaDescription, keyword),
     scoreSlug(post.slug),
     scoreContent(post, keyword),
+    scoreInternalLinks(post),
   ]
 
   const totalScore = fields.reduce((sum, field) => sum + field.score, 0)

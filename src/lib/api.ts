@@ -42,6 +42,25 @@ export async function apiRequest<T>(
   return parseResponse<T>(response)
 }
 
+async function apiFormRequest<T>(
+  path: string,
+  formData: FormData,
+  token?: string | null,
+): Promise<T> {
+  const headers = new Headers()
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  })
+
+  return parseResponse<T>(response)
+}
+
 export type PublicUser = {
   id: string
   email: string
@@ -462,6 +481,10 @@ export type AutoBlogSettings = {
   featuredImageKeyError: string | null
   multi_step_prompts: MultiStepPrompts
   topic_niche: string
+  topic_generate_count: number
+  internal_linking_enabled: boolean
+  internal_linking_max_links: number
+  blog_public_base_url: string
   created_at: string
   updated_at: string
 }
@@ -488,6 +511,7 @@ export type CategoryConcept = {
 export type AutoBlogTopic = {
   id: string
   topic: string
+  focusKeyword: string | null
   status: string
   source: string
   priority: number
@@ -497,6 +521,34 @@ export type AutoBlogTopic = {
   errorMessage: string | null
   createdAt: string
   updatedAt: string
+}
+
+export type AutoBlogInternalLink = {
+  url: string
+  anchorText: string
+  targetPostId: string
+  targetTitle: string
+}
+
+export type AutoBlogSeoMetadata = {
+  score: number
+  grade: 'Excellent' | 'Good' | 'Fair' | 'Needs work'
+  searchIntent: string
+  secondaryKeywords: string[]
+  recommendationsApplied: string[]
+  optimized: boolean
+  schemaJsonLd: Record<string, unknown> | null
+}
+
+export type AutoBlogTopicBrief = {
+  searchIntent: string
+  targetAudience: string
+  uniqueAngle: string
+  readerOutcome: string
+  outline: Array<{ heading: string; points: string[] }>
+  mustCover: string[]
+  secondaryKeywords: string[]
+  tone: string
 }
 
 export type AutoBlogPost = {
@@ -522,6 +574,9 @@ export type AutoBlogPost = {
   remotePostId: string | null
   remotePostUrl: string | null
   livePublishError: string | null
+  internalLinks: AutoBlogInternalLink[]
+  seoMetadata: AutoBlogSeoMetadata | null
+  topicBrief: AutoBlogTopicBrief | null
   createdAt: string
   updatedAt: string
 }
@@ -663,7 +718,12 @@ export const autoBlogApi = {
 
   addTopic: (
     token: string,
-    payload: { topic: string; categoryId?: string | null; priority?: number },
+    payload: {
+      topic: string
+      focusKeyword?: string | null
+      categoryId?: string | null
+      priority?: number
+    },
   ) =>
     apiRequest<{ topic: AutoBlogTopic; message: string }>(
       '/auto-blog/topics',
@@ -1290,9 +1350,47 @@ export const blogApi = {
     apiRequest<{ post: PublicBlogPost }>(`/blog/posts/${encodeURIComponent(slug)}`),
 }
 
+export type SitePageSeoRecord = {
+  id: string
+  pageKey: string
+  pageName: string
+  pageCategory: string
+  path: string
+  metaTitle: string
+  metaDescription: string
+  keywords: string[]
+  h1: string
+  ogType: 'website' | 'article'
+  ogImage: string
+  noindex: boolean
+  schemaTypes: string[]
+  schemaJson: Record<string, unknown>[] | null
+  contentBlocks: import('./sitePageBlocks').SitePageBlock[] | null
+  contentActive: boolean
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export const siteSeoApi = {
+  listPages: () => apiRequest<{ pages: SitePageSeoRecord[] }>('/site-seo/pages'),
+  getPageByPath: (path: string) =>
+    apiRequest<{ page: SitePageSeoRecord }>(`/site-seo/page?path=${encodeURIComponent(path)}`),
+}
+
 export type SupportTicketCategory = 'billing' | 'credits' | 'technical' | 'account' | 'general'
 export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
 export type SupportTicketPriority = 'low' | 'normal' | 'high'
+
+export type SupportTicketAttachment = {
+  id: string
+  messageId: string
+  ticketId: string
+  fileName: string
+  mimeType: string
+  fileSize: number
+  createdAt: string
+}
 
 export type SupportTicketMessage = {
   id: string
@@ -1302,6 +1400,7 @@ export type SupportTicketMessage = {
   authorAdminId: string | null
   authorName: string | null
   message: string
+  attachments: SupportTicketAttachment[]
   createdAt: string
 }
 
@@ -1351,18 +1450,40 @@ export const supportApi = {
       category: SupportTicketCategory
       priority?: SupportTicketPriority
       message: string
+      attachments?: File[]
     },
-  ) =>
-    apiRequest<{ ticket: SupportTicketDetail; message: string }>(
-      '/support/tickets',
-      { method: 'POST', body: JSON.stringify(payload) },
-      token,
-    ),
+  ) => {
+    const formData = new FormData()
+    formData.set('subject', payload.subject)
+    formData.set('category', payload.category)
+    if (payload.priority) formData.set('priority', payload.priority)
+    formData.set('message', payload.message)
+    for (const file of payload.attachments ?? []) {
+      formData.append('attachments', file)
+    }
 
-  reply: (token: string, ticketId: string, message: string) =>
-    apiRequest<{ ticket: SupportTicketDetail; message: string }>(
-      `/support/tickets/${ticketId}/messages`,
-      { method: 'POST', body: JSON.stringify({ message }) },
+    return apiFormRequest<{ ticket: SupportTicketDetail; message: string }>(
+      '/support/tickets',
+      formData,
       token,
-    ),
+    )
+  },
+
+  reply: (
+    token: string,
+    ticketId: string,
+    payload: { message: string; attachments?: File[] },
+  ) => {
+    const formData = new FormData()
+    formData.set('message', payload.message)
+    for (const file of payload.attachments ?? []) {
+      formData.append('attachments', file)
+    }
+
+    return apiFormRequest<{ ticket: SupportTicketDetail; message: string }>(
+      `/support/tickets/${ticketId}/messages`,
+      formData,
+      token,
+    )
+  },
 }

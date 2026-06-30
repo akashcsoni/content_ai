@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import ContentIcon from '../components/ContentIcon'
-import SEO from '../components/SEO'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
 import { siteConfig } from '../config/site'
 import {
   aboutAudiences,
@@ -12,21 +11,15 @@ import {
 import '../styles/about.css'
 
 export default function AboutPage() {
-  const seo = pageSeo.about
-
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'About', path: '/about' },
-        ])}
-      />
-
+    <ManagedPageContent
+      pageKey="about"
+      breadcrumbItems={[
+        { name: 'Home', path: '/' },
+        { name: 'About', path: '/about' },
+      ]}
+      replace
+    >
       <div className="about-page">
         <section className="about-hero" aria-labelledby="about-heading">
           <div className="about-container">
@@ -187,6 +180,6 @@ export default function AboutPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

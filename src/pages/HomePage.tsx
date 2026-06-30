@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import ContentIcon, { type ContentIconName } from '../components/ContentIcon'
-import SEO from '../components/SEO'
+import ManagedPageContent from '../components/ManagedPageContent'
 import ServiceCard from '../components/ServiceCard'
-import { organizationJsonLd, pageSeo, websiteJsonLd } from '../config/seo'
+import HomeServiceMockupSlider from '../components/HomeServiceMockupSlider'
 import { liveServices, services } from '../data/services'
 import '../styles/home.css'
 
@@ -58,19 +58,10 @@ const stats = [
 ]
 
 export default function HomePage() {
-  const seo = pageSeo.home
   const featuredService = services.find((service) => service.id === 'auto-blog')
 
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={[organizationJsonLd, websiteJsonLd]}
-      />
-
+    <ManagedPageContent pageKey="home" replace>
       <div className="home">
         <section className="home-hero" aria-labelledby="home-heading">
           <div className="home-container home-hero-grid">
@@ -101,41 +92,7 @@ export default function HomePage() {
               </ul>
             </div>
 
-            <div className="home-hero-visual" aria-hidden="true">
-              <div className="home-mockup">
-                <div className="home-mockup-top">
-                  <span className="home-mockup-dot home-mockup-dot--red" />
-                  <span className="home-mockup-dot home-mockup-dot--yellow" />
-                  <span className="home-mockup-dot home-mockup-dot--green" />
-                  <span className="home-mockup-title">Blog Generator</span>
-                </div>
-                <div className="home-mockup-body">
-                  <div className="home-mockup-row">
-                    <span className="home-mockup-label">API Status</span>
-                    <span className="home-mockup-pill home-mockup-pill--success">
-                      OpenAI connected
-                    </span>
-                  </div>
-                  <div className="home-mockup-field">
-                    <span className="home-mockup-label">Topic</span>
-                    <p>10 AI content trends for 2026</p>
-                  </div>
-                  <div className="home-mockup-field">
-                    <span className="home-mockup-label">Outline</span>
-                    <ul>
-                      <li>Introduction & hook</li>
-                      <li>Key trends breakdown</li>
-                      <li>Actionable takeaways</li>
-                    </ul>
-                  </div>
-                  <div className="home-mockup-progress">
-                    <div className="home-mockup-progress-bar" />
-                    <span>Generating draft… 78%</span>
-                  </div>
-                </div>
-              </div>
-              <div className="home-mockup-glow" />
-            </div>
+            <HomeServiceMockupSlider />
           </div>
         </section>
 
@@ -276,6 +233,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

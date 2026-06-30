@@ -92,8 +92,8 @@ export default function AccountInvoicePage() {
   return (
     <>
       <SEO
-        title="Invoice | Content AI"
-        description="View and print your Content AI purchase invoice."
+        title="Purchase Invoice — View and Download Receipt | Content AI"
+        description="View and download your Content AI purchase invoice with itemized credits, payment details, and billing information from your account billing history page."
         path={`/account/billing/invoice/${purchaseId}`}
         noindex
         jsonLd={breadcrumbJsonLd([

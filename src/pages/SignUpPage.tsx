@@ -1,15 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import SEO from '../components/SEO'
+import ManagedSEO from '../components/ManagedSEO'
 import { useAuth } from '../context/AuthContext'
 import { ApiError, authApi } from '../lib/api'
-import { pageSeo } from '../config/seo'
+import { applySendCodeResponse } from '../lib/authDevCode'
 import '../styles/auth.css'
 
 export default function SignUpPage() {
   const navigate = useNavigate()
   const { signIn } = useAuth()
-  const seo = pageSeo.signUp
 
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -20,19 +19,24 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [devCode, setDevCode] = useState<string | null>(null)
 
   async function sendVerificationCode() {
     setLoading(true)
     setError('')
     setInfo('')
+    setDevCode(null)
 
     try {
       const response = await authApi.sendCode(email, 'signup')
       setCodeSent(true)
       setCode('')
-      setInfo(
-        `Code sent to ${email}. Check your inbox, then enter the code below with your password. Expires in ${response.expiresInMinutes} minutes.`,
-      )
+      const result = applySendCodeResponse(email, response)
+      setInfo(result.info)
+      setDevCode(result.devCode)
+      if (result.devCode) {
+        setCode(result.devCode)
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to send verification code')
     } finally {
@@ -80,11 +84,12 @@ export default function SignUpPage() {
     setConfirmPassword('')
     setError('')
     setInfo('')
+    setDevCode(null)
   }
 
   return (
     <>
-      <SEO title={seo.title} description={seo.description} path={seo.path} keywords={[...seo.keywords]} />
+      <ManagedSEO pageKey="signUp" noindex />
 
       <div className="auth-page">
         <div className="auth-card">
@@ -105,6 +110,11 @@ export default function SignUpPage() {
 
           {error && <p className="auth-alert auth-alert--error">{error}</p>}
           {info && <p className="auth-alert auth-alert--info">{info}</p>}
+          {devCode && (
+            <p className="auth-alert auth-alert--dev" role="status">
+              Development code: <strong className="auth-dev-code">{devCode}</strong>
+            </p>
+          )}
 
           {!codeSent ? (
             <form className="auth-form" onSubmit={handleSendCode}>

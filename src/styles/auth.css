@@ -201,6 +201,14 @@
   color: var(--text-h);
 }
 
+.auth-dev-code {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
 .auth-switch {
   margin-top: 1.25rem;
   text-align: center;

@@ -1,27 +1,21 @@
 import { Link } from 'react-router-dom'
 import ContentIcon from '../components/ContentIcon'
-import SEO from '../components/SEO'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
 import { liveServices, servicesStats } from '../data/services'
 import '../styles/services.css'
 
 export default function ServicesPage() {
-  const seo = pageSeo.services
   const liveCount = liveServices.length
 
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'Services', path: '/services' },
-        ])}
-      />
-
+    <ManagedPageContent
+      pageKey="services"
+      breadcrumbItems={[
+        { name: 'Home', path: '/' },
+        { name: 'Services', path: '/services' },
+      ]}
+      replace
+    >
       <div className="services-page">
         <section className="services-hero" aria-labelledby="services-heading">
           <div className="services-container">
@@ -170,6 +164,6 @@ export default function ServicesPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faCircleCheck,
@@ -49,6 +49,8 @@ export default function AutoBlogListTab({
   const creditCostLabel = formatCreditCostLabel(creditCost)
   const [posts, setPosts] = useState<AutoBlogPostDetail[]>([])
   const [selectedPost, setSelectedPost] = useState<AutoBlogPostDetail | null>(null)
+  const [previewExpanded, setPreviewExpanded] = useState(true)
+  const previewRef = useRef<HTMLDivElement>(null)
   const [postTab, setPostTab] = useState<PostTab>('all')
   const [postSearch, setPostSearch] = useState('')
   const [postPage, setPostPage] = useState(1)
@@ -90,6 +92,12 @@ export default function AutoBlogListTab({
   useEffect(() => {
     void loadData()
   }, [loadData])
+
+  useEffect(() => {
+    if (selectedPost && previewExpanded) {
+      previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [selectedPost?.id, previewExpanded])
 
   const filteredPosts = useMemo(() => {
     const query = postSearch.trim().toLowerCase()
@@ -133,6 +141,7 @@ export default function AutoBlogListTab({
     try {
       const response = await autoBlogApi.getPost(token, postId)
       setSelectedPost(response.post)
+      setPreviewExpanded(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to open blog post')
     }
@@ -152,8 +161,10 @@ export default function AutoBlogListTab({
       if (response.failed) {
         setError(response.message)
         setSelectedPost(response.post)
+        setPreviewExpanded(true)
       } else {
         setSelectedPost(response.post)
+        setPreviewExpanded(true)
         setError('')
         flashSuccess(response.message)
       }
@@ -215,7 +226,7 @@ export default function AutoBlogListTab({
       <div className="service-tab-toolbar">
         <div>
           <h2>Blog list</h2>
-          <p>Generated blog posts from your topic queue. Click a row to preview content.</p>
+          <p>Generated blog posts from your topic queue. Click a row to open the full preview below.</p>
         </div>
 
         <label className="service-active-toggle">
@@ -343,7 +354,9 @@ export default function AutoBlogListTab({
                         key={post.id}
                         className={`service-logs-table-row${
                           canOpen ? ' service-logs-table-row--clickable' : ''
-                        }${post.status === 'failed' ? ' service-logs-table-row--muted' : ''}`}
+                        }${post.status === 'failed' ? ' service-logs-table-row--muted' : ''}${
+                          selectedPost?.id === post.id ? ' service-logs-table-row--selected' : ''
+                        }`}
                         tabIndex={canOpen ? 0 : -1}
                         onClick={() => {
                           if (canOpen) void openPost(post.id)
@@ -432,9 +445,19 @@ export default function AutoBlogListTab({
         )}
       </section>
 
-      {selectedPost && (
-        <AutoBlogPostPreview post={selectedPost} onClose={() => setSelectedPost(null)} />
-      )}
+      {selectedPost ? (
+        <div ref={previewRef}>
+          <AutoBlogPostPreview
+            post={selectedPost}
+            expanded={previewExpanded}
+            onExpandedChange={setPreviewExpanded}
+            onClose={() => {
+              setSelectedPost(null)
+              setPreviewExpanded(true)
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

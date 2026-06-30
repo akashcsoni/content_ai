@@ -6,7 +6,8 @@
 }
 
 .site-header--scrolled .header-main {
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+  border-bottom-color: var(--border);
 }
 
 .site-header--account {
@@ -54,7 +55,7 @@
 /* Top announcement bar */
 .header-topbar {
   border-bottom: 1px solid var(--border);
-  background: var(--accent-bg);
+  background: var(--bg);
 }
 
 .header-topbar-inner {
@@ -62,13 +63,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 2.5rem;
-  font-size: 0.8125rem;
+  min-height: 2.75rem;
+  font-size: 0.78rem;
 }
 
 .header-topbar p {
-  color: var(--text-h);
-  opacity: 0.9;
+  color: var(--text-muted);
 }
 
 .header-topbar-link {
@@ -92,9 +92,8 @@
 /* Main header bar */
 .header-main {
   border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(14px);
-  transition: box-shadow 0.2s;
+  background: var(--bg);
+  transition: border-color 0.2s;
 }
 
 .header-main-inner {
@@ -108,9 +107,10 @@
 .header-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
   color: var(--text-h);
   min-width: 0;
+  max-width: min(100%, 16rem);
+  background: transparent;
 }
 
 .header-logo-text {
@@ -147,20 +147,92 @@
 .header-nav-link {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 0.8rem;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: var(--text);
-  transition: background 0.15s, color 0.15s;
+  color: var(--text-h);
+  transition: opacity 0.15s, color 0.15s;
 }
 
 .header-nav-link:hover {
+  background: transparent;
+  color: var(--text-h);
+  opacity: 0.65;
+}
+
+.header-nav-link.active {
+  background: transparent;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.header-nav-item {
+  position: relative;
+}
+
+.header-nav-item--dropdown .header-nav-link--trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  gap: 0.35rem;
+}
+
+.header-nav-chevron {
+  font-size: 0.65rem;
+  opacity: 0.65;
+  transition: transform 0.15s ease;
+}
+
+.header-nav-item--dropdown:hover .header-nav-chevron,
+.header-nav-item--dropdown:focus-within .header-nav-chevron,
+.header-nav-item--dropdown.is-active .header-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.header-nav-submenu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 30;
+  min-width: 15rem;
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.25rem);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.header-nav-item--dropdown:hover .header-nav-submenu,
+.header-nav-item--dropdown:focus-within .header-nav-submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.header-nav-submenu-link {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.header-nav-submenu-link:hover {
   background: var(--bg-soft);
   color: var(--text-h);
 }
 
-.header-nav-link.active {
+.header-nav-submenu-link.active {
   background: var(--accent-bg);
   color: var(--text-h);
 }
@@ -296,6 +368,29 @@
   gap: 0.35rem;
 }
 
+.header-mobile-nav-group-label {
+  display: block;
+  padding: 0.35rem 0.75rem 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.header-mobile-nav-sublist {
+  list-style: none;
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0 0 0.35rem;
+}
+
+.header-mobile-nav-sublist .header-mobile-link {
+  padding-left: 1.15rem;
+  font-size: 0.92rem;
+}
+
 .header-mobile-link {
   display: flex;
   align-items: center;
@@ -362,6 +457,14 @@
   .header-main-inner {
     min-height: 3.75rem;
     gap: 0.75rem;
+  }
+
+  .header-logo {
+    max-width: min(100%, 13rem);
+  }
+
+  .site-logo--header {
+    height: 2.1rem;
   }
 
   .header-container {

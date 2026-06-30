@@ -3,16 +3,14 @@ import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import ContentIcon from '../components/ContentIcon'
-import SEO from '../components/SEO'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
 import { siteConfig } from '../config/site'
-import { faqCategories, faqPageJsonLd } from '../data/faq'
+import { faqCategories } from '../data/faq'
 import '../styles/faq.css'
 
 type ActiveFilter = 'all' | string
 
 export default function FAQPage() {
-  const seo = pageSeo.faq
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -40,21 +38,7 @@ export default function FAQPage() {
   )
 
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={[
-          breadcrumbJsonLd([
-            { name: 'Home', path: '/' },
-            { name: 'FAQ', path: '/faq' },
-          ]),
-          faqPageJsonLd(),
-        ]}
-      />
-
+    <ManagedPageContent pageKey="faq" replace>
       <div className="faq-page">
         <section className="faq-hero" aria-labelledby="faq-heading">
           <div className="faq-container">
@@ -217,6 +201,6 @@ export default function FAQPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

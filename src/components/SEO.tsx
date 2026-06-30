@@ -16,6 +16,11 @@ type SEOProps = {
 
 const JSON_LD_ID = 'page-json-ld'
 
+function isAccountPath(path: string): boolean {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  return normalized === '/account' || normalized.startsWith('/account/')
+}
+
 function upsertMeta(
   selector: string,
   attributes: Record<string, string>,
@@ -71,7 +76,8 @@ export default function SEO({
 }: SEOProps) {
   useEffect(() => {
     const canonicalUrl = `${siteConfig.url.replace(/\/$/, '')}${path}`
-    const robots = noindex ? 'noindex, nofollow' : 'index, follow'
+    const shouldNoindex = noindex || isAccountPath(path)
+    const robots = shouldNoindex ? 'noindex, nofollow' : 'index, follow'
     const ogImage = image?.trim()
 
     document.title = title

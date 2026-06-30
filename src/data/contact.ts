@@ -39,3 +39,39 @@ export const contactReasons = [
   'Early access to upcoming services',
   'Partnerships & agency inquiries',
 ]
+
+export type ContactMethod = (typeof contactMethods)[number]
+
+export const contactSidebarDefaults = {
+  methods: contactMethods,
+  reasons: contactReasons,
+  reasonsHeading: 'What can we help with?',
+  accentTitle: 'Need a faster answer?',
+  accentDescription: 'Check our FAQ for instant answers about pricing credits, API keys, and blog creation.',
+  accentButtonLabel: 'Visit help center',
+  accentButtonLink: '/faq',
+  officeNote: 'Remote-first team · Serving creators worldwide',
+} as const
+
+export function resolveContactSidebarContent(block: Record<string, unknown>) {
+  const methods =
+    Array.isArray(block.methods) && block.methods.length > 0
+      ? (block.methods as ContactMethod[])
+      : contactSidebarDefaults.methods
+
+  const reasons =
+    Array.isArray(block.reasons) && block.reasons.length > 0
+      ? (block.reasons as string[])
+      : contactSidebarDefaults.reasons
+
+  return {
+    methods,
+    reasons,
+    reasonsHeading: String(block.reasonsHeading ?? contactSidebarDefaults.reasonsHeading),
+    accentTitle: String(block.accentTitle ?? contactSidebarDefaults.accentTitle),
+    accentDescription: String(block.accentDescription ?? contactSidebarDefaults.accentDescription),
+    accentButtonLabel: String(block.accentButtonLabel ?? contactSidebarDefaults.accentButtonLabel),
+    accentButtonLink: String(block.accentButtonLink ?? contactSidebarDefaults.accentButtonLink),
+    officeNote: String(block.officeNote ?? contactSidebarDefaults.officeNote),
+  }
+}

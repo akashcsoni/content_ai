@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import SEO from '../components/SEO'
-import { blogPostingJsonLd, breadcrumbJsonLd, pageSeo } from '../config/seo'
-import { siteConfig } from '../config/site'
+import { blogPostingJsonLd, breadcrumbJsonLd, formatSeoDocumentTitle, pageSeo } from '../config/seo'
 import { blogApi, type PublicBlogPost } from '../lib/api'
 import '../styles/blog.css'
 
@@ -68,6 +67,7 @@ export default function BlogPostPage() {
 
   const path = `/blog/${slug}`
   const seoTitle = post?.seoTitle?.trim() || post?.title || 'Blog post'
+  const documentTitle = formatSeoDocumentTitle(seoTitle)
   const seoDescription =
     post?.metaDescription?.trim() || post?.excerpt?.trim() || pageSeo.blog.description
   const keywords = post?.focusKeyword
@@ -80,7 +80,7 @@ export default function BlogPostPage() {
   return (
     <>
       <SEO
-        title={`${seoTitle} — ${siteConfig.name}`}
+        title={documentTitle}
         description={seoDescription}
         path={path}
         keywords={keywords}

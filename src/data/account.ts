@@ -1,3 +1,9 @@
+export type AccountQuickLinkItem = {
+  to: string
+  title: string
+  description: string
+}
+
 export type AccountAction = {
   id: string
   title: string
@@ -13,6 +19,65 @@ export type AccountStep = {
   description: string
   done?: boolean
 }
+
+export const accountDashboardQuickLinks: AccountQuickLinkItem[] = [
+  {
+    to: '/account/billing',
+    title: 'Billing & credits',
+    description: 'Buy credits or review payment history',
+  },
+  {
+    to: '/account/usage',
+    title: 'Usage',
+    description: 'See credits used and generation activity',
+  },
+  {
+    to: '/account/settings',
+    title: 'Account settings',
+    description: 'Update profile and change password',
+  },
+  {
+    to: '/account/support',
+    title: 'Support',
+    description: 'Get help or open a support ticket',
+  },
+]
+
+export const accountSettingsQuickLinks: AccountQuickLinkItem[] = [
+  {
+    to: '/account',
+    title: 'Dashboard',
+    description: 'Credits, usage, and services overview',
+  },
+  {
+    to: '/account/usage',
+    title: 'Usage',
+    description: 'Requests, tokens, and activity history',
+  },
+  {
+    to: '/account/billing',
+    title: 'Billing',
+    description: 'Purchase credits and view payment history',
+  },
+]
+
+export const accountSupportQuickLinks: AccountQuickLinkItem[] = [
+  {
+    to: '/account/billing',
+    title: 'Billing & credits',
+    description: 'Buy credits or review payment history',
+  },
+  {
+    to: '/faq',
+    title: 'FAQ',
+    description: 'Answers to common platform questions',
+  },
+  {
+    to: '/account/usage',
+    title: 'Usage',
+    description: 'See credits used and generation activity',
+  },
+]
 
 export const accountActions: AccountAction[] = [
   {

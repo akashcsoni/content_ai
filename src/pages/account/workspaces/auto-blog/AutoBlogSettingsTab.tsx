@@ -73,12 +73,16 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
         contentLanguage: settings.content_language,
         publishStatus: settings.publish_status,
         seoEnabled: settings.seo_enabled,
+        internalLinkingEnabled: settings.internal_linking_enabled,
+        internalLinkingMaxLinks: settings.internal_linking_max_links,
+        blogPublicBaseUrl: settings.blog_public_base_url,
         featuredImageEnabled: settings.featured_image_enabled,
         featuredImageAiProvider: settings.featured_image_ai_provider,
         featuredImageAiModel: settings.featured_image_ai_model,
         featuredImageApiKey: featuredImageApiKey.trim() || undefined,
         multiStepPrompts: settings.multi_step_prompts,
         topicNiche: settings.topic_niche,
+        topicGenerateCount: settings.topic_generate_count,
       })
 
       setSettings(response.settings)
@@ -116,6 +120,9 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
         contentLanguage: 'en',
         publishStatus: 'draft',
         seoEnabled: true,
+        internalLinkingEnabled: true,
+        internalLinkingMaxLinks: 5,
+        blogPublicBaseUrl: '',
         featuredImageEnabled: false,
         featuredImageAiProvider: 'openai',
         featuredImageAiModel: 'dall-e-3',
@@ -123,6 +130,7 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
         enabled: true,
         multiStepPrompts: undefined,
         topicNiche: DEFAULT_TOPIC_NICHE_PROMPT,
+        topicGenerateCount: 10,
       })
 
       setSettings(response.settings)
@@ -309,17 +317,9 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
                     }
                   >
                     <option value="single">Single call</option>
-                    <option value="multi_step" disabled>
-                      Multi-step (6 AI calls) — coming soon
-                    </option>
+                    <option value="multi_step">Multi-step (6 AI calls)</option>
                   </select>
                 </label>
-                {isMultiStep && (
-                  <p className="service-workspace-alert service-workspace-alert--warning">
-                    Multi-step mode is not available yet. Switch to <strong>Single call</strong> — posts
-                    currently generate with one AI request.
-                  </p>
-                )}
               </div>
 
               <div className="service-settings-field-group">
@@ -685,6 +685,8 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
                   {settings.topic_niche.trim()
                     ? `${settings.topic_niche.trim().slice(0, 48)}${settings.topic_niche.length > 48 ? '…' : ''}`
                     : 'Set your niche for AI topic ideas'}
+                  {' · '}
+                  {settings.topic_generate_count} topics per batch
                 </span>
               </span>
             </summary>
@@ -721,6 +723,34 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
                     Restore default template
                   </button>
                 </div>
+
+                <label className="service-settings-input-narrow" htmlFor="blog-topic-generate-count">
+                  AI topics per batch
+                  <input
+                    id="blog-topic-generate-count"
+                    type="number"
+                    min={5}
+                    max={50}
+                    value={settings.topic_generate_count}
+                    onChange={(event) =>
+                      setSettings((current) =>
+                        current
+                          ? {
+                              ...current,
+                              topic_generate_count: Math.min(
+                                50,
+                                Math.max(5, Number(event.target.value) || 10),
+                              ),
+                            }
+                          : current,
+                      )
+                    }
+                  />
+                  <span className="service-field-hint">
+                    How many topics AI creates each time you click Generate with AI (5–50). Default
+                    is 10.
+                  </span>
+                </label>
               </div>
 
               <PromptShortcodeReference title="Available shortcodes for prompts" />
@@ -734,6 +764,7 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
                 <span className="service-settings-section-meta">
                   {settings.publish_status === 'published' ? 'Publish immediately' : 'Save as draft'}
                   {settings.seo_enabled ? ' · SEO on' : ' · SEO off'}
+                  {settings.internal_linking_enabled ? ' · Internal links on' : ' · Internal links off'}
                 </span>
               </span>
             </summary>
@@ -773,7 +804,86 @@ export default function AutoBlogSettingsTab({ onSettingsSaved }: AutoBlogSetting
                     Generate SEO title, meta description, and focus keyword
                   </span>
                 </label>
+                <p className="service-field-hint">
+                  SEO Optimization runs automatically on every generated post when this is enabled:
+                  scoring out of 100, metadata fixes, search intent, secondary keywords, and
+                  BlogPosting JSON-LD schema. No extra credits — included in Auto Blog.
+                </p>
               </div>
+
+              <div className="service-settings-field-group service-settings-field-group--stack">
+                <label className="service-toggle-row">
+                  <input
+                    type="checkbox"
+                    checked={settings.internal_linking_enabled}
+                    disabled={!settings.seo_enabled}
+                    onChange={(event) =>
+                      setSettings(
+                        (current) =>
+                          current && {
+                            ...current,
+                            internal_linking_enabled: event.target.checked,
+                          },
+                      )
+                    }
+                  />
+                  <span className="service-toggle-label">
+                    Add intelligent internal links to new posts
+                  </span>
+                </label>
+                <p className="service-field-hint">
+                  After the draft is generated, Content AI scans your existing posts and weaves in
+                  2–{settings.internal_linking_max_links} contextual links for stronger site SEO.
+                  Requires at least 2 prior posts and a public blog URL.
+                </p>
+              </div>
+
+              {settings.internal_linking_enabled && settings.seo_enabled ? (
+                <div className="service-settings-field-group">
+                  <label htmlFor="blog-public-base-url">
+                    Public blog URL base
+                    <input
+                      id="blog-public-base-url"
+                      type="url"
+                      placeholder="https://yoursite.com/blog"
+                      value={settings.blog_public_base_url}
+                      onChange={(event) =>
+                        setSettings(
+                          (current) =>
+                            current && {
+                              ...current,
+                              blog_public_base_url: event.target.value,
+                            },
+                        )
+                      }
+                    />
+                  </label>
+                  <p className="service-field-hint">
+                    Used to build internal link URLs like{' '}
+                    <code>{settings.blog_public_base_url || 'https://yoursite.com/blog'}/your-post-slug</code>.
+                    Leave blank to use your Live Publish site URL.
+                  </p>
+                  <label className="service-settings-input-narrow" htmlFor="blog-internal-link-max">
+                    Max internal links per post
+                    <input
+                      id="blog-internal-link-max"
+                      type="number"
+                      min={2}
+                      max={8}
+                      value={settings.internal_linking_max_links}
+                      onChange={(event) =>
+                        setSettings(
+                          (current) =>
+                            current && {
+                              ...current,
+                              internal_linking_max_links: Number(event.target.value),
+                            },
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              ) : null}
             </div>
           </details>
 

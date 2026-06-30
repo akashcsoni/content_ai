@@ -7,8 +7,7 @@ import {
   faHeadset,
   faShieldHalved,
 } from '@fortawesome/free-solid-svg-icons'
-import SEO from '../components/SEO'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
 import { siteConfig } from '../config/site'
 import {
   getOverallStatusFromGroups,
@@ -41,7 +40,6 @@ function formatToday(): string {
 }
 
 export default function StatusPage() {
-  const seo = pageSeo.status
   const globalStatus = getOverallStatusFromGroups(statusGroups)
   const banner = globalStatus === 'operational' ? overallStatus : {
     ...overallStatus,
@@ -51,18 +49,14 @@ export default function StatusPage() {
   }
 
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'Status', path: '/status' },
-        ])}
-      />
-
+    <ManagedPageContent
+      pageKey="status"
+      breadcrumbItems={[
+        { name: 'Home', path: '/' },
+        { name: 'Status', path: '/status' },
+      ]}
+      replace
+    >
       <div className="status-page">
         <section className="status-hero" aria-labelledby="status-heading">
           <div className="status-container">
@@ -227,6 +221,6 @@ export default function StatusPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }

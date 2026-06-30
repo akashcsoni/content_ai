@@ -17,9 +17,11 @@ import { ApiError, autoBlogApi, type AutoBlogPostDetail } from '../../../../lib/
 import { useAuth } from '../../../../context/AuthContext'
 import { formatCreditCostLabel, useServiceCreditCost, useServiceCredits } from '../../../../context/ServiceCreditsContext'
 import type { AutoBlogCategory, AutoBlogSettings, AutoBlogTopic } from './autoBlog.types'
-import { formatTopicStatus } from './autoBlog.types'
+import { formatTopicStatus, resolveTopicGenerateCount } from './autoBlog.types'
 import AutoBlogPostPreview from './AutoBlogPostPreview'
 import ServicePagination from './ServicePagination'
+import TopicQueueManualAdd, { type TopicQueueEntry } from '../shared/TopicQueueManualAdd'
+import TopicQueueBestResultsTip from '../shared/TopicQueueBestResultsTip'
 
 const TOPIC_PAGE_SIZE = 10
 
@@ -59,6 +61,7 @@ export default function AutoBlogTopicsTab({
   const [topics, setTopics] = useState<AutoBlogTopic[]>([])
   const [categories, setCategories] = useState<AutoBlogCategory[]>([])
   const [selectedPost, setSelectedPost] = useState<AutoBlogPostDetail | null>(null)
+  const [previewExpanded, setPreviewExpanded] = useState(true)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all')
   const [topicTab, setTopicTab] = useState<TopicTab>('pending')
   const [topicSearch, setTopicSearch] = useState('')
@@ -67,11 +70,12 @@ export default function AutoBlogTopicsTab({
   const [topicTotal, setTopicTotal] = useState(0)
   const [topicPendingCount, setTopicPendingCount] = useState(0)
   const [newTopic, setNewTopic] = useState('')
+  const [newFocusKeyword, setNewFocusKeyword] = useState('')
   const [newTopicCategoryId, setNewTopicCategoryId] = useState('')
-  const [generateTopicCount, setGenerateTopicCount] = useState(10)
   const [loading, setLoading] = useState(true)
   const [generatingTopicId, setGeneratingTopicId] = useState<string | null>(null)
   const [generatingTopics, setGeneratingTopics] = useState(false)
+  const [addingTopics, setAddingTopics] = useState(false)
   const [togglingActive, setTogglingActive] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -114,6 +118,13 @@ export default function AutoBlogTopicsTab({
     void loadData()
   }, [loadData])
 
+  useEffect(() => {
+    if (!token) return
+    void autoBlogApi.getSettings(token).then((response) => onSettingsSaved(response.settings))
+  }, [token, onSettingsSaved])
+
+  const topicBatchCount = resolveTopicGenerateCount(settings?.topic_generate_count)
+
   const filteredTopics = useMemo(() => {
     const query = topicSearch.trim().toLowerCase()
     if (!query) return topics
@@ -121,6 +132,7 @@ export default function AutoBlogTopicsTab({
     return topics.filter(
       (topic) =>
         topic.topic.toLowerCase().includes(query) ||
+        topic.focusKeyword?.toLowerCase().includes(query) ||
         topic.categoryName?.toLowerCase().includes(query) ||
         topic.source.toLowerCase().includes(query),
     )
@@ -148,20 +160,49 @@ export default function AutoBlogTopicsTab({
     }
   }
 
-  async function handleAddTopic() {
-    if (!token || !newTopic.trim()) return
+  async function handleAddTopics(entries: TopicQueueEntry[]) {
+    if (!token || entries.length === 0) return
 
+    setAddingTopics(true)
     setError('')
+
+    let added = 0
+    let skipped = 0
+
     try {
-      await autoBlogApi.addTopic(token, {
-        topic: newTopic.trim(),
-        categoryId: newTopicCategoryId || null,
-      })
+      for (const entry of entries) {
+        try {
+          await autoBlogApi.addTopic(token, {
+            topic: entry.topic,
+            focusKeyword: entry.focusKeyword?.trim() || null,
+            categoryId: newTopicCategoryId || null,
+          })
+          added += 1
+        } catch (err) {
+          if (err instanceof ApiError && err.message.includes('already in your pending queue')) {
+            skipped += 1
+          } else {
+            throw err
+          }
+        }
+      }
+
       setNewTopic('')
+      setNewFocusKeyword('')
       await loadData()
-      flashSuccess('Topic added')
+      if (added > 0) {
+        flashSuccess(
+          skipped > 0
+            ? `${added} topic${added === 1 ? '' : 's'} added · ${skipped} duplicate${skipped === 1 ? '' : 's'} skipped`
+            : `${added} topic${added === 1 ? '' : 's'} added to queue`,
+        )
+      } else if (skipped > 0) {
+        setError('All topics are already in your pending queue')
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to add topic')
+    } finally {
+      setAddingTopics(false)
     }
   }
 
@@ -172,12 +213,22 @@ export default function AutoBlogTopicsTab({
     setError('')
 
     try {
+      // Always read the latest saved batch size from the server before generating.
+      const settingsResponse = await autoBlogApi.getSettings(token)
+      onSettingsSaved(settingsResponse.settings)
+      const batchCount = resolveTopicGenerateCount(
+        settingsResponse.settings.topic_generate_count,
+      )
+
       const response = await autoBlogApi.generateTopics(token, {
-        count: generateTopicCount,
         categoryId: selectedCategoryId === 'all' ? null : selectedCategoryId,
       })
       await loadData()
-      flashSuccess(response.message)
+      flashSuccess(
+        response.added === batchCount
+          ? response.message
+          : `${response.added} topic${response.added === 1 ? '' : 's'} added (${batchCount} requested in Settings)`,
+      )
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to generate topics')
     } finally {
@@ -205,8 +256,10 @@ export default function AutoBlogTopicsTab({
       if (response.failed) {
         setError(response.message)
         setSelectedPost(response.post)
+        setPreviewExpanded(true)
       } else {
         setSelectedPost(response.post)
+        setPreviewExpanded(true)
         setError('')
         flashSuccess(response.message)
       }
@@ -250,6 +303,7 @@ export default function AutoBlogTopicsTab({
     try {
       const response = await autoBlogApi.getPost(token, postId)
       setSelectedPost(response.post)
+      setPreviewExpanded(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to open blog post')
     }
@@ -308,7 +362,10 @@ export default function AutoBlogTopicsTab({
     <div className="service-tab-panel">
       <div className="service-tab-toolbar">
         <div>
-          <h2>Topic queue</h2>
+          <div className="service-title-with-help">
+            <h2>Topic queue</h2>
+            <TopicQueueBestResultsTip />
+          </div>
           <p>Add topics manually or generate them with AI. Create blog posts from pending topics.</p>
         </div>
 
@@ -357,6 +414,19 @@ export default function AutoBlogTopicsTab({
         </p>
       )}
 
+      <TopicQueueManualAdd
+        topic={newTopic}
+        onTopicChange={setNewTopic}
+        focusKeyword={newFocusKeyword}
+        onFocusKeywordChange={setNewFocusKeyword}
+        showFocusKeyword
+        categoryId={newTopicCategoryId}
+        onCategoryChange={setNewTopicCategoryId}
+        categories={categories}
+        onAddTopics={handleAddTopics}
+        submitting={addingTopics}
+      />
+
       <section className="service-logs-panel service-topics-panel" aria-label="Topic queue">
         <nav className="service-logs-tabs" aria-label="Topic filters">
           {topicTabs.map((tab) => (
@@ -398,7 +468,7 @@ export default function AutoBlogTopicsTab({
             onClick={() => setShowTopicFilters((current) => !current)}
           >
             <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
-            Add filter
+            Filters & AI
           </button>
 
           <span className="service-logs-count">
@@ -428,16 +498,10 @@ export default function AutoBlogTopicsTab({
               </select>
             </label>
 
-            <label className="service-logs-filter-field">
-              <span>AI topic count</span>
-              <input
-                type="number"
-                min="5"
-                max="50"
-                value={generateTopicCount}
-                onChange={(event) => setGenerateTopicCount(Number(event.target.value))}
-              />
-            </label>
+            <p className="service-logs-filter-note">
+              Generates <strong>{topicBatchCount}</strong> topics per batch from Settings → Topics
+              &amp; niche → AI topics per batch.
+            </p>
 
             <div className="service-logs-filter-actions">
               <button
@@ -446,43 +510,9 @@ export default function AutoBlogTopicsTab({
                 disabled={!canUseWorkspace || generatingTopics}
                 onClick={() => void handleGenerateTopics()}
               >
-                {generatingTopics ? 'Generating...' : 'Generate with AI'}
-              </button>
-            </div>
-
-            <label className="service-logs-filter-field">
-              <span>New topic</span>
-              <input
-                type="text"
-                value={newTopic}
-                placeholder="Add a topic manually"
-                onChange={(event) => setNewTopic(event.target.value)}
-              />
-            </label>
-
-            <label className="service-logs-filter-field">
-              <span>Topic category</span>
-              <select
-                value={newTopicCategoryId}
-                onChange={(event) => setNewTopicCategoryId(event.target.value)}
-              >
-                <option value="">No category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="service-logs-filter-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={!newTopic.trim() || !canUseWorkspace}
-                onClick={() => void handleAddTopic()}
-              >
-                Add topic
+                {generatingTopics
+                  ? 'Generating...'
+                  : `Generate ${topicBatchCount} topics with AI`}
               </button>
             </div>
           </div>
@@ -497,7 +527,7 @@ export default function AutoBlogTopicsTab({
               <span>
                 {topicSearch.trim()
                   ? 'Try a different search or filter.'
-                  : 'Generate topics with AI or add one manually using Add filter.'}
+                  : 'Add topics manually above or generate them with AI using Filters & AI.'}
               </span>
             </div>
           ) : (
@@ -543,6 +573,11 @@ export default function AutoBlogTopicsTab({
                           <span className="service-logs-cell-text service-logs-cell-text--strong service-logs-cell-text--truncate">
                             {topic.topic}
                           </span>
+                          {topic.focusKeyword ? (
+                            <span className="service-logs-cell-meta service-topics-focus-keyword">
+                              Focus: {topic.focusKeyword}
+                            </span>
+                          ) : null}
                           {topic.errorMessage && (
                             <span className="service-logs-cell-error">{topic.errorMessage}</span>
                           )}
@@ -643,7 +678,15 @@ export default function AutoBlogTopicsTab({
       </section>
 
       {selectedPost && (
-        <AutoBlogPostPreview post={selectedPost} onClose={() => setSelectedPost(null)} />
+        <AutoBlogPostPreview
+          post={selectedPost}
+          expanded={previewExpanded}
+          onExpandedChange={setPreviewExpanded}
+          onClose={() => {
+            setSelectedPost(null)
+            setPreviewExpanded(true)
+          }}
+        />
       )}
     </div>
   )

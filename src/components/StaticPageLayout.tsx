@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom'
-import SEO from './SEO'
-import { breadcrumbJsonLd, type PageSeo } from '../config/seo'
+import ManagedSEO from './ManagedSEO'
+import type { PageSeoKey } from '../config/seo'
 import type { StaticPageConfig } from '../data/staticPages'
 import '../styles/static-page.css'
 
 type StaticPageLayoutProps = {
   page: StaticPageConfig
-  seo: PageSeo
+  pageKey: PageSeoKey
+  includeSeo?: boolean
 }
 
 const statusLabels = {
@@ -15,19 +16,22 @@ const statusLabels = {
   outage: 'Outage',
 } as const
 
-export default function StaticPageLayout({ page, seo }: StaticPageLayoutProps) {
+export default function StaticPageLayout({
+  page,
+  pageKey,
+  includeSeo = true,
+}: StaticPageLayoutProps) {
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: page.breadcrumb, path: page.path },
-        ])}
-      />
+      {includeSeo ? (
+        <ManagedSEO
+          pageKey={pageKey}
+          breadcrumbItems={[
+            { name: 'Home', path: '/' },
+            { name: page.breadcrumb, path: page.path },
+          ]}
+        />
+      ) : null}
 
       <div className="static-page">
         <section className="static-hero" aria-labelledby="static-page-heading">

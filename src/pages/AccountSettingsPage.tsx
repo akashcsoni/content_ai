@@ -12,9 +12,10 @@ import {
   faUser,
 } from '@fortawesome/free-solid-svg-icons'
 import AccountHero from '../components/AccountHero'
-import SEO from '../components/SEO'
+import AccountQuickLinks from '../components/AccountQuickLinks'
+import ManagedSEO from '../components/ManagedSEO'
 import { useAuth } from '../context/AuthContext'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import { accountSettingsQuickLinks } from '../data/account'
 import { ApiError, authApi, billingApi } from '../lib/api'
 import '../styles/account.css'
 import '../styles/account-dashboard.css'
@@ -58,8 +59,6 @@ export default function AccountSettingsPage() {
   const [billingTaxId, setBillingTaxId] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  const seo = pageSeo.settings
 
   useEffect(() => {
     setFullName(user?.fullName ?? '')
@@ -187,16 +186,14 @@ export default function AccountSettingsPage() {
 
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
+      <ManagedSEO
+        pageKey="settings"
+        noindex
+        breadcrumbItems={[
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
           { name: 'Settings', path: '/account/settings' },
-        ])}
+        ]}
       />
 
       <div className="account-page account-settings-page">
@@ -572,29 +569,7 @@ export default function AccountSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="account-home-quick-links">
-                    <Link to="/account" className="account-home-quick-link">
-                      <div>
-                        <strong>Dashboard</strong>
-                        <span>Credits, usage, and services overview</span>
-                      </div>
-                      <em>Open →</em>
-                    </Link>
-                    <Link to="/account/usage" className="account-home-quick-link">
-                      <div>
-                        <strong>Usage</strong>
-                        <span>Requests, tokens, and activity history</span>
-                      </div>
-                      <em>View →</em>
-                    </Link>
-                    <Link to="/account/billing" className="account-home-quick-link">
-                      <div>
-                        <strong>Billing</strong>
-                        <span>Purchase credits and view payment history</span>
-                      </div>
-                      <em>Manage →</em>
-                    </Link>
-                  </div>
+                  <AccountQuickLinks links={accountSettingsQuickLinks} />
                 </div>
 
                 <div className="account-panel account-settings-actions-panel">

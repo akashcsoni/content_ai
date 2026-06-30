@@ -37,9 +37,8 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-main">
           <div className="footer-brand-col">
-            <Link to="/" className="footer-logo" aria-label="Content AI home">
-              <BrandIcon size="sm" className="logo-icon" />
-              <span>{siteConfig.name}</span>
+            <Link to="/" className="footer-logo" aria-label={`${siteConfig.name} home`}>
+              <BrandIcon size="md" className="logo-icon" />
             </Link>
             <p className="footer-about">
               {siteConfig.description}

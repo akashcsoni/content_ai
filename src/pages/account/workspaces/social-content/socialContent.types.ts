@@ -60,7 +60,15 @@ export const postImageProviderLabels: Record<PostImageProvider, string> = {
 
 export const postImageProviderModels: Record<PostImageProvider, string[]> = {
   openai: ['dall-e-3', 'dall-e-2'],
-  google: ['imagen-3.0-generate-002', 'gemini-2.0-flash-preview-image-generation'],
+  google: [
+    'gemini-3.1-flash-image',
+    'gemini-2.5-flash-image',
+    'gemini-3-pro-image',
+    'gemini-3.1-flash-image-preview',
+    'gemini-3-pro-image-preview',
+    'imagen-4.0-generate-001',
+    'imagen-4.0-fast-generate-001',
+  ],
 }
 
 export const toneLabels: Record<SocialContentTone, string> = {

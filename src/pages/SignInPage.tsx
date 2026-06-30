@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import SEO from '../components/SEO'
+import ManagedSEO from '../components/ManagedSEO'
 import { useAuth } from '../context/AuthContext'
 import { ApiError, authApi } from '../lib/api'
-import { pageSeo } from '../config/seo'
+import { applySendCodeResponse } from '../lib/authDevCode'
 import '../styles/auth.css'
 
 type SignInMode = 'password' | 'code'
@@ -11,7 +11,6 @@ type SignInMode = 'password' | 'code'
 export default function SignInPage() {
   const navigate = useNavigate()
   const { signIn: saveSession } = useAuth()
-  const seo = pageSeo.signIn
 
   const [mode, setMode] = useState<SignInMode>('password')
   const [email, setEmail] = useState('')
@@ -21,17 +20,24 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [devCode, setDevCode] = useState<string | null>(null)
 
   async function handleSendCode(event: FormEvent) {
     event.preventDefault()
     setLoading(true)
     setError('')
     setInfo('')
+    setDevCode(null)
 
     try {
       const response = await authApi.sendCode(email, 'signin')
       setCodeSent(true)
-      setInfo(`Sign in code sent to ${email}. Check your inbox. Expires in ${response.expiresInMinutes} minutes.`)
+      const result = applySendCodeResponse(email, response)
+      setInfo(result.info)
+      setDevCode(result.devCode)
+      if (result.devCode) {
+        setCode(result.devCode)
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to send sign in code')
     } finally {
@@ -73,7 +79,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <SEO title={seo.title} description={seo.description} path={seo.path} keywords={[...seo.keywords]} />
+      <ManagedSEO pageKey="signIn" noindex />
 
       <div className="auth-page">
         <div className="auth-card">
@@ -93,6 +99,7 @@ export default function SignInPage() {
                 setMode('password')
                 setError('')
                 setInfo('')
+                setDevCode(null)
               }}
             >
               Password
@@ -106,6 +113,7 @@ export default function SignInPage() {
                 setMode('code')
                 setError('')
                 setInfo('')
+                setDevCode(null)
               }}
             >
               Email code
@@ -114,6 +122,11 @@ export default function SignInPage() {
 
           {error && <p className="auth-alert auth-alert--error">{error}</p>}
           {info && <p className="auth-alert auth-alert--info">{info}</p>}
+          {devCode && (
+            <p className="auth-alert auth-alert--dev" role="status">
+              Development code: <strong className="auth-dev-code">{devCode}</strong>
+            </p>
+          )}
 
           {mode === 'password' ? (
             <form className="auth-form" onSubmit={handlePasswordSignIn}>

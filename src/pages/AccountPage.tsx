@@ -11,12 +11,12 @@ import {
   faReceipt,
 } from '@fortawesome/free-solid-svg-icons'
 import AccountHero from '../components/AccountHero'
+import AccountQuickLinks from '../components/AccountQuickLinks'
 import ContentIcon from '../components/ContentIcon'
-import SEO from '../components/SEO'
+import ManagedSEO from '../components/ManagedSEO'
 import { useAuth } from '../context/AuthContext'
 import { formatCreditCostLabel, useServiceCredits } from '../context/ServiceCreditsContext'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
-import { accountActions, gettingStartedSteps } from '../data/account'
+import { accountDashboardQuickLinks, gettingStartedSteps } from '../data/account'
 import { getServiceAccountPath, liveServices } from '../data/services'
 import {
   billingApi,
@@ -119,8 +119,6 @@ export default function AccountPage() {
   const [billingStats, setBillingStats] = useState<BillingStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const seo = pageSeo.account
-
   const range = useMemo(() => getRangeForDays(periodDays), [periodDays])
 
   const loadDashboard = useCallback(async () => {
@@ -164,15 +162,13 @@ export default function AccountPage() {
 
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
+      <ManagedSEO
+        pageKey="account"
+        noindex
+        breadcrumbItems={[
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
-        ])}
+        ]}
       />
 
       <div className="account-page">
@@ -329,40 +325,81 @@ export default function AccountPage() {
                 </div>
 
                 <div className="account-home-layout">
-                  <div className="account-panel account-services-section" id="services">
-                    <div className="account-home-section-head">
-                      <div>
-                        <h2>Your services</h2>
-                        <p>{liveServiceCount} live service{liveServiceCount === 1 ? '' : 's'} ready to use</p>
+                  <div className="account-home-main">
+                    <div className="account-panel">
+                      <div className="account-home-section-head">
+                        <div>
+                          <h2>Recent activity</h2>
+                          <p>Latest content generation events.</p>
+                        </div>
+                        <Link to="/account/usage" className="account-panel-link">
+                          View all
+                        </Link>
                       </div>
-                      <Link to="/services" className="account-panel-link">
-                        Browse all
-                      </Link>
+
+                      {!usageStats || usageStats.recentActivity.length === 0 ? (
+                        <p className="account-muted">No activity in this period yet.</p>
+                      ) : (
+                        <ul className="account-home-activity-list">
+                          {usageStats.recentActivity.slice(0, 5).map((item) => (
+                            <li key={item.id}>
+                              <div className="account-home-activity-main">
+                                <div>
+                                  <strong>{item.title}</strong>
+                                  <span>
+                                    <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />{' '}
+                                    {item.service.replace(/_/g, ' ')} · {item.status}
+                                  </span>
+                                </div>
+                                {item.creditsUsed > 0 ? (
+                                  <span className="account-usage-type">-{item.creditsUsed} credit</span>
+                                ) : null}
+                              </div>
+                              <div className="account-home-activity-meta">
+                                <span>{formatCompactTokens(item.tokens)} tokens</span>
+                                <time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
 
-                    <div className="account-services-grid">
-                      {liveServices.map((service) => (
-                        <Link
-                          key={service.id}
-                          to={getServiceAccountPath(service.id)}
-                          className="account-service-card account-service-card--live"
-                        >
-                          <div className="account-service-card-top">
-                            <ContentIcon name={service.icon} className="account-service-card-icon" />
-                            <span className="account-service-card-badge account-service-card-badge--live">
-                              Live
-                            </span>
-                          </div>
-                          <h3>{service.title}</h3>
-                          <p>{service.shortDescription}</p>
-                          <div className="account-service-card-footer">
-                            <span className="account-service-card-credits">
-                              {formatCreditCostLabel(getCreditCost(service.id))} / use
-                            </span>
-                            <span className="account-service-card-link">Open →</span>
-                          </div>
+                    <div className="account-panel account-services-section" id="services">
+                      <div className="account-home-section-head">
+                        <div>
+                          <h2>Your services</h2>
+                          <p>{liveServiceCount} live service{liveServiceCount === 1 ? '' : 's'} ready to use</p>
+                        </div>
+                        <Link to="/services" className="account-panel-link">
+                          Browse all
                         </Link>
-                      ))}
+                      </div>
+
+                      <div className="account-services-grid">
+                        {liveServices.map((service) => (
+                          <Link
+                            key={service.id}
+                            to={getServiceAccountPath(service.id)}
+                            className="account-service-card account-service-card--live"
+                          >
+                            <div className="account-service-card-top">
+                              <ContentIcon name={service.icon} className="account-service-card-icon" />
+                              <span className="account-service-card-badge account-service-card-badge--live">
+                                Live
+                              </span>
+                            </div>
+                            <h3>{service.title}</h3>
+                            <p>{service.shortDescription}</p>
+                            <div className="account-service-card-footer">
+                              <span className="account-service-card-credits">
+                                {formatCreditCostLabel(getCreditCost(service.id))} / use
+                              </span>
+                              <span className="account-service-card-link">Open →</span>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -405,63 +442,7 @@ export default function AccountPage() {
                         </div>
                       </div>
 
-                      <div className="account-home-quick-links">
-                        {accountActions.map((action) => (
-                          <Link key={action.id} to={action.link} className="account-home-quick-link">
-                            <div>
-                              <strong>{action.title}</strong>
-                              <span>{action.description}</span>
-                            </div>
-                            <em>{action.label} →</em>
-                          </Link>
-                        ))}
-                        <Link to="/account/settings" className="account-home-quick-link">
-                          <div>
-                            <strong>Account settings</strong>
-                            <span>Update profile and change password</span>
-                          </div>
-                          <em>Edit →</em>
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="account-panel">
-                      <div className="account-home-section-head">
-                        <div>
-                          <h2>Recent activity</h2>
-                          <p>Latest content generation events.</p>
-                        </div>
-                        <Link to="/account/usage" className="account-panel-link">
-                          View all
-                        </Link>
-                      </div>
-
-                      {!usageStats || usageStats.recentActivity.length === 0 ? (
-                        <p className="account-muted">No activity in this period yet.</p>
-                      ) : (
-                        <ul className="account-home-activity-list">
-                          {usageStats.recentActivity.slice(0, 5).map((item) => (
-                            <li key={item.id}>
-                              <div className="account-home-activity-main">
-                                <div>
-                                  <strong>{item.title}</strong>
-                                  <span>
-                                    <FontAwesomeIcon icon={faPenToSquare} aria-hidden="true" />{' '}
-                                    {item.service.replace(/_/g, ' ')} · {item.status}
-                                  </span>
-                                </div>
-                                {item.creditsUsed > 0 ? (
-                                  <span className="account-usage-type">-{item.creditsUsed} credit</span>
-                                ) : null}
-                              </div>
-                              <div className="account-home-activity-meta">
-                                <span>{formatCompactTokens(item.tokens)} tokens</span>
-                                <time dateTime={item.createdAt}>{formatDateTime(item.createdAt)}</time>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      <AccountQuickLinks links={accountDashboardQuickLinks} />
                     </div>
                   </aside>
                 </div>

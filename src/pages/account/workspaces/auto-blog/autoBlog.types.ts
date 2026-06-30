@@ -81,6 +81,10 @@ export type AutoBlogSettings = {
   featuredImageKeyError: string | null
   multi_step_prompts: MultiStepPrompts
   topic_niche: string
+  topic_generate_count: number
+  internal_linking_enabled: boolean
+  internal_linking_max_links: number
+  blog_public_base_url: string
   created_at: string
   updated_at: string
 }
@@ -101,6 +105,7 @@ export type AutoBlogCategory = {
 export type AutoBlogTopic = {
   id: string
   topic: string
+  focusKeyword: string | null
   status: string
   source: string
   priority: number
@@ -110,6 +115,34 @@ export type AutoBlogTopic = {
   errorMessage: string | null
   createdAt: string
   updatedAt: string
+}
+
+export type AutoBlogTopicBrief = {
+  searchIntent: string
+  targetAudience: string
+  uniqueAngle: string
+  readerOutcome: string
+  outline: Array<{ heading: string; points: string[] }>
+  mustCover: string[]
+  secondaryKeywords: string[]
+  tone: string
+}
+
+export type AutoBlogSeoMetadata = {
+  score: number
+  grade: 'Excellent' | 'Good' | 'Fair' | 'Needs work'
+  searchIntent: string
+  secondaryKeywords: string[]
+  recommendationsApplied: string[]
+  optimized: boolean
+  schemaJsonLd: Record<string, unknown> | null
+}
+
+export type AutoBlogInternalLink = {
+  url: string
+  anchorText: string
+  targetPostId: string
+  targetTitle: string
 }
 
 export type AutoBlogPost = {
@@ -135,6 +168,9 @@ export type AutoBlogPost = {
   remotePostId: string | null
   remotePostUrl: string | null
   livePublishError: string | null
+  internalLinks: AutoBlogInternalLink[]
+  seoMetadata: AutoBlogSeoMetadata | null
+  topicBrief: AutoBlogTopicBrief | null
   createdAt: string
   updatedAt: string
 }
@@ -187,7 +223,13 @@ export const contentLengthPresets = {
 export const providerModels: Record<AutoBlogProvider, string[]> = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
   anthropic: ['claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022'],
-  google: ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-pro'],
+  google: [
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+  ],
   deepseek: ['deepseek-chat', 'deepseek-reasoner'],
 }
 
@@ -198,7 +240,15 @@ export const featuredImageProviderLabels: Record<FeaturedImageProvider, string> 
 
 export const featuredImageProviderModels: Record<FeaturedImageProvider, string[]> = {
   openai: ['dall-e-3', 'dall-e-2'],
-  google: ['imagen-3.0-generate-002', 'gemini-2.0-flash-preview-image-generation'],
+  google: [
+    'gemini-3.1-flash-image',
+    'gemini-2.5-flash-image',
+    'gemini-3-pro-image',
+    'gemini-3.1-flash-image-preview',
+    'gemini-3-pro-image-preview',
+    'imagen-4.0-generate-001',
+    'imagen-4.0-fast-generate-001',
+  ],
 }
 
 export const multiStepSlugs: MultiStepSlug[] = [
@@ -216,6 +266,13 @@ export function formatBlogDate(dateValue: string): string {
     month: 'short',
     day: 'numeric',
   })
+}
+
+export function resolveTopicGenerateCount(value: unknown, fallback = 10): number {
+  const parsed = Number(value)
+  const base = Number.isFinite(parsed) ? parsed : Number(fallback)
+  const normalized = Number.isFinite(base) ? base : 10
+  return Math.min(50, Math.max(5, Math.round(normalized)))
 }
 
 export function formatTopicStatus(status: string): string {

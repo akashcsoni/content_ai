@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: 'Content AI',
-  tagline: 'Smart Content Creation',
+  name: 'WBBYWRITER',
+  tagline: 'Digital Content & Solutions',
   description:
-    'Generate blogs and marketing content with your own AI API keys. Content AI helps creators and teams scale content while staying in control of cost and data.',
+    'Digital content and AI solutions for creators and teams. Generate blogs and marketing content with your own API keys — full control, zero markup.',
   url: import.meta.env.VITE_SITE_URL ?? 'https://contentai.example',
   locale: 'en_US',
   twitterHandle: '@contentai',

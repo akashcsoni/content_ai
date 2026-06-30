@@ -10,10 +10,9 @@ import {
   faReceipt,
 } from '@fortawesome/free-solid-svg-icons'
 import AccountHero from '../components/AccountHero'
-import SEO from '../components/SEO'
+import ManagedSEO from '../components/ManagedSEO'
 import UsageCreditBalanceCard from '../components/UsageCreditBalanceCard'
 import { useAuth } from '../context/AuthContext'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
 import { creditExamples } from '../data/pricing'
 import {
   billingApi,
@@ -223,7 +222,6 @@ export default function AccountBillingPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  const seo = pageSeo.billing
   const creditPriceCents = config?.creditPriceCents ?? 100
 
   const purchaseCredits = useMemo(() => {
@@ -420,16 +418,14 @@ export default function AccountBillingPage() {
 
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
+      <ManagedSEO
+        pageKey="billing"
+        noindex
+        breadcrumbItems={[
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
           { name: 'Billing', path: '/account/billing' },
-        ])}
+        ]}
       />
 
       <div className="account-page account-billing-page">

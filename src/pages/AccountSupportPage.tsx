@@ -5,17 +5,18 @@ import {
   faArrowRight,
   faArrowRotateRight,
   faCheck,
-  faCircleQuestion,
   faClock,
-  faCreditCard,
   faHeadset,
   faInbox,
   faPlus,
 } from '@fortawesome/free-solid-svg-icons'
 import AccountHero from '../components/AccountHero'
-import SEO from '../components/SEO'
+import AccountQuickLinks from '../components/AccountQuickLinks'
+import SupportAttachmentField from '../components/SupportAttachmentField'
+import ManagedSEO from '../components/ManagedSEO'
 import { useAuth } from '../context/AuthContext'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import { accountSupportQuickLinks } from '../data/account'
+import { validateSupportAttachmentFiles } from '../lib/supportAttachments'
 import {
   supportApi,
   type SupportTicketCategory,
@@ -71,8 +72,7 @@ export default function AccountSupportPage() {
   const [category, setCategory] = useState<SupportTicketCategory>('general')
   const [priority, setPriority] = useState<SupportTicketPriority>('normal')
   const [message, setMessage] = useState('')
-
-  const seo = pageSeo.support
+  const [attachments, setAttachments] = useState<File[]>([])
 
   const loadTickets = useCallback(async () => {
     if (!token) return
@@ -105,6 +105,17 @@ export default function AccountSupportPage() {
     event.preventDefault()
     if (!token) return
 
+    const attachmentError = validateSupportAttachmentFiles(attachments)
+    if (attachmentError) {
+      setError(attachmentError)
+      return
+    }
+
+    if (!message.trim() && attachments.length === 0) {
+      setError('Add a message or at least one attachment')
+      return
+    }
+
     setCreating(true)
     setError('')
     setSuccess('')
@@ -114,10 +125,12 @@ export default function AccountSupportPage() {
         category,
         priority,
         message,
+        attachments,
       })
       setSuccess(response.message)
       setSubject('')
       setMessage('')
+      setAttachments([])
       setCategory('general')
       setPriority('normal')
       await loadTickets()
@@ -130,16 +143,14 @@ export default function AccountSupportPage() {
 
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
+      <ManagedSEO
+        pageKey="support"
+        noindex
+        breadcrumbItems={[
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
           { name: 'Support', path: '/account/support' },
-        ])}
+        ]}
       />
 
       <div className="account-page account-support-page">
@@ -219,14 +230,16 @@ export default function AccountSupportPage() {
             </div>
 
             <div className="account-home-layout account-support-layout">
-              <div className="account-panel account-support-tickets-panel">
+              <div className="account-support-main">
+                <div className="account-panel account-support-tickets-panel">
                 <div className="account-home-section-head">
                   <div>
                     <h2>Your tickets</h2>
                     <p>Track replies and status updates from our support team.</p>
                   </div>
                   <span className="account-support-count-chip">
-                    <strong>{stats.total}</strong> total
+                    <strong>{stats.total}</strong>
+                    <span>total</span>
                   </span>
                 </div>
 
@@ -238,48 +251,65 @@ export default function AccountSupportPage() {
                       <FontAwesomeIcon icon={faInbox} />
                     </span>
                     <p>No support tickets yet</p>
-                    <span>Create your first ticket using the form on the right.</span>
+                    <span>Create your first ticket using the form below.</span>
                     <a href="#new-ticket" className="btn btn-primary">
                       Create ticket
                     </a>
                   </div>
                 ) : (
-                  <ul className="account-support-ticket-grid">
-                    {tickets.map((ticket) => (
-                      <li key={ticket.id}>
-                        <Link to={`/account/support/${ticket.id}`} className="account-support-ticket-card">
-                          <div className="account-support-ticket-card-top">
-                            <span className="account-support-ticket-icon" aria-hidden="true">
-                              <FontAwesomeIcon icon={faHeadset} />
-                            </span>
-                            <span className={statusClass(ticket.status)}>{statusLabel(ticket.status)}</span>
-                          </div>
-                          <strong>{ticket.subject}</strong>
-                          <div className="account-support-ticket-meta">
-                            <span className="account-support-chip">{ticket.category}</span>
-                            <span className="account-support-chip account-support-chip--muted">
-                              {priorityLabel(ticket.priority)}
-                            </span>
-                            <span>#{ticket.id.slice(0, 8)}</span>
-                          </div>
-                          {ticket.lastMessagePreview ? (
-                            <p className="account-support-ticket-preview">{ticket.lastMessagePreview}</p>
-                          ) : null}
-                          <div className="account-support-ticket-footer">
-                            <time dateTime={ticket.updatedAt}>Updated {formatDateTime(ticket.updatedAt)}</time>
-                            <span className="account-support-ticket-link">
-                              View thread
-                              <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
-                            </span>
-                          </div>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="account-support-tickets-table-wrap">
+                    <table className="account-support-tickets-table">
+                      <thead>
+                        <tr>
+                          <th>Subject</th>
+                          <th>Category</th>
+                          <th>Status</th>
+                          <th>Priority</th>
+                          <th>Updated</th>
+                          <th aria-label="Actions" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tickets.map((ticket) => (
+                          <tr key={ticket.id}>
+                            <td className="account-support-tickets-subject">
+                              <strong>{ticket.subject}</strong>
+                              {ticket.lastMessagePreview ? (
+                                <span>{ticket.lastMessagePreview}</span>
+                              ) : null}
+                              <em>#{ticket.id.slice(0, 8)}</em>
+                            </td>
+                            <td>
+                              <span className="account-support-chip">{ticket.category}</span>
+                            </td>
+                            <td>
+                              <span className={statusClass(ticket.status)}>{statusLabel(ticket.status)}</span>
+                            </td>
+                            <td>
+                              <span className="account-support-chip account-support-chip--muted">
+                                {priorityLabel(ticket.priority)}
+                              </span>
+                            </td>
+                            <td className="account-support-tickets-date">
+                              <time dateTime={ticket.updatedAt}>{formatDateTime(ticket.updatedAt)}</time>
+                              <span>
+                                {ticket.messageCount} message{ticket.messageCount === 1 ? '' : 's'}
+                              </span>
+                            </td>
+                            <td className="account-support-tickets-action">
+                              <Link to={`/account/support/${ticket.id}`} className="btn btn-secondary btn-sm">
+                                Open
+                                <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
-              </div>
+                </div>
 
-              <aside className="account-dashboard-sidebar account-support-sidebar">
                 <div className="account-panel account-support-create-panel" id="new-ticket">
                   <div className="account-home-section-head">
                     <div>
@@ -340,21 +370,32 @@ export default function AccountSupportPage() {
                       <textarea
                         className="account-support-input account-support-textarea"
                         rows={5}
-                        required
                         value={message}
                         placeholder="Tell us what happened and how we can help..."
                         onChange={(event) => setMessage(event.target.value)}
                       />
                     </label>
 
+                    <SupportAttachmentField
+                      files={attachments}
+                      onChange={setAttachments}
+                      disabled={creating}
+                    />
+
                     <div className="account-support-actions">
-                      <button type="submit" className="btn btn-primary btn-block" disabled={creating}>
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-block"
+                        disabled={creating || (!message.trim() && attachments.length === 0)}
+                      >
                         {creating ? 'Submitting...' : 'Submit ticket'}
                       </button>
                     </div>
                   </form>
                 </div>
+              </div>
 
+              <aside className="account-dashboard-sidebar account-support-sidebar">
                 <div className="account-panel">
                   <div className="account-home-section-head">
                     <div>
@@ -363,29 +404,7 @@ export default function AccountSupportPage() {
                     </div>
                   </div>
 
-                  <div className="account-home-quick-links">
-                    <Link to="/account/billing" className="account-home-quick-link">
-                      <div>
-                        <strong>Billing & credits</strong>
-                        <span>Buy credits or review payment history</span>
-                      </div>
-                      <FontAwesomeIcon icon={faCreditCard} aria-hidden="true" />
-                    </Link>
-                    <Link to="/faq" className="account-home-quick-link">
-                      <div>
-                        <strong>FAQ</strong>
-                        <span>Answers to common platform questions</span>
-                      </div>
-                      <FontAwesomeIcon icon={faCircleQuestion} aria-hidden="true" />
-                    </Link>
-                    <Link to="/account/usage" className="account-home-quick-link">
-                      <div>
-                        <strong>Usage</strong>
-                        <span>See credits used and generation activity</span>
-                      </div>
-                      <em>→</em>
-                    </Link>
-                  </div>
+                  <AccountQuickLinks links={accountSupportQuickLinks} />
                 </div>
               </aside>
             </div>

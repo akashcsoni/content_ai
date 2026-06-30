@@ -20,6 +20,7 @@ import type { EmailNewsletterCategory, EmailNewsletterSettings, EmailNewsletterT
 import { formatNewsletterTopicStatus } from './emailNewsletter.types'
 import EmailNewsletterPreview from './EmailNewsletterPreview'
 import ServicePagination from './ServicePagination'
+import TopicQueueManualAdd, { type TopicQueueEntry } from '../shared/TopicQueueManualAdd'
 
 const TOPIC_PAGE_SIZE = 10
 
@@ -72,6 +73,7 @@ export default function EmailNewsletterTopicsTab({
   const [loading, setLoading] = useState(true)
   const [generatingTopicId, setGeneratingTopicId] = useState<string | null>(null)
   const [generatingTopics, setGeneratingTopics] = useState(false)
+  const [addingTopics, setAddingTopics] = useState(false)
   const [togglingActive, setTogglingActive] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -146,20 +148,47 @@ export default function EmailNewsletterTopicsTab({
     }
   }
 
-  async function handleAddTopic() {
-    if (!token || !newTopic.trim()) return
+  async function handleAddTopics(entries: TopicQueueEntry[]) {
+    if (!token || entries.length === 0) return
 
+    setAddingTopics(true)
     setError('')
+
+    let added = 0
+    let skipped = 0
+
     try {
-      await emailNewsletterApi.addTopic(token, {
-        topic: newTopic.trim(),
-        categoryId: newTopicCategoryId || null,
-      })
+      for (const entry of entries) {
+        try {
+          await emailNewsletterApi.addTopic(token, {
+            topic: entry.topic,
+            categoryId: newTopicCategoryId || null,
+          })
+          added += 1
+        } catch (err) {
+          if (err instanceof ApiError && err.message.includes('already in your pending queue')) {
+            skipped += 1
+          } else {
+            throw err
+          }
+        }
+      }
+
       setNewTopic('')
       await loadData()
-      flashSuccess('Topic added')
+      if (added > 0) {
+        flashSuccess(
+          skipped > 0
+            ? `${added} topic${added === 1 ? '' : 's'} added · ${skipped} duplicate${skipped === 1 ? '' : 's'} skipped`
+            : `${added} topic${added === 1 ? '' : 's'} added to queue`,
+        )
+      } else if (skipped > 0) {
+        setError('All topics are already in your pending queue')
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to add topic')
+    } finally {
+      setAddingTopics(false)
     }
   }
 
@@ -341,6 +370,16 @@ export default function EmailNewsletterTopicsTab({
         </p>
       )}
 
+      <TopicQueueManualAdd
+        topic={newTopic}
+        onTopicChange={setNewTopic}
+        categoryId={newTopicCategoryId}
+        onCategoryChange={setNewTopicCategoryId}
+        categories={categories}
+        onAddTopics={handleAddTopics}
+        submitting={addingTopics}
+      />
+
       <section className="service-logs-panel service-topics-panel" aria-label="Topic queue">
         <nav className="service-logs-tabs" aria-label="Topic filters">
           {topicTabs.map((tab) => (
@@ -382,7 +421,7 @@ export default function EmailNewsletterTopicsTab({
             onClick={() => setShowTopicFilters((current) => !current)}
           >
             <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
-            Add filter
+            Filters & AI
           </button>
 
           <span className="service-logs-count">
@@ -433,42 +472,6 @@ export default function EmailNewsletterTopicsTab({
                 {generatingTopics ? 'Generating...' : 'Generate with AI'}
               </button>
             </div>
-
-            <label className="service-logs-filter-field">
-              <span>New topic</span>
-              <input
-                type="text"
-                value={newTopic}
-                placeholder="Add a topic manually"
-                onChange={(event) => setNewTopic(event.target.value)}
-              />
-            </label>
-
-            <label className="service-logs-filter-field">
-              <span>Topic category</span>
-              <select
-                value={newTopicCategoryId}
-                onChange={(event) => setNewTopicCategoryId(event.target.value)}
-              >
-                <option value="">No category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="service-logs-filter-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={!newTopic.trim() || !canUseWorkspace}
-                onClick={() => void handleAddTopic()}
-              >
-                Add topic
-              </button>
-            </div>
           </div>
         )}
 
@@ -481,7 +484,7 @@ export default function EmailNewsletterTopicsTab({
               <span>
                 {topicSearch.trim()
                   ? 'Try a different search or filter.'
-                  : 'Generate topics with AI or add one manually using Add filter.'}
+                  : 'Add topics manually above or generate them with AI using Filters & AI.'}
               </span>
             </div>
           ) : (

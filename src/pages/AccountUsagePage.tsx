@@ -11,10 +11,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import AccountHero from '../components/AccountHero'
-import SEO from '../components/SEO'
+import ManagedSEO from '../components/ManagedSEO'
 import UsageCreditBalanceCard from '../components/UsageCreditBalanceCard'
 import { useAuth } from '../context/AuthContext'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
 import { usageApi, type UsageActivityItem, type UsageDailyPoint, type UsageStats } from '../lib/api'
 import ServicePagination from './account/workspaces/auto-blog/ServicePagination'
 import '../styles/account.css'
@@ -217,8 +216,6 @@ export default function AccountUsagePage() {
   const [error, setError] = useState('')
   const [usageView, setUsageView] = useState<'services' | 'work' | 'creditsAdded'>('services')
   const [workPage, setWorkPage] = useState(1)
-  const seo = pageSeo.usage
-
   const loadStats = useCallback(async () => {
     if (!token) return
 
@@ -315,16 +312,14 @@ export default function AccountUsagePage() {
 
   return (
     <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
+      <ManagedSEO
+        pageKey="usage"
+        noindex
+        breadcrumbItems={[
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
           { name: 'Usage', path: '/account/usage' },
-        ])}
+        ]}
       />
 
       <div className="account-page account-usage-page">

@@ -14,8 +14,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import AccountHero from '../components/AccountHero'
 import SEO from '../components/SEO'
+import SupportAttachmentField from '../components/SupportAttachmentField'
+import SupportMessageAttachments from '../components/SupportMessageAttachments'
 import { useAuth } from '../context/AuthContext'
 import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import { validateSupportAttachmentFiles } from '../lib/supportAttachments'
 import {
   supportApi,
   type SupportTicketDetail,
@@ -82,6 +85,7 @@ export default function AccountSupportTicketPage() {
   const { token } = useAuth()
   const [ticket, setTicket] = useState<SupportTicketDetail | null>(null)
   const [reply, setReply] = useState('')
+  const [replyAttachments, setReplyAttachments] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
   const [replying, setReplying] = useState(false)
   const [error, setError] = useState('')
@@ -116,15 +120,27 @@ export default function AccountSupportTicketPage() {
 
   async function handleReply(event: React.FormEvent) {
     event.preventDefault()
-    if (!token || !ticketId || !reply.trim()) return
+    if (!token || !ticketId) return
+
+    const attachmentError = validateSupportAttachmentFiles(replyAttachments)
+    if (attachmentError) {
+      setError(attachmentError)
+      return
+    }
+
+    if (!reply.trim() && replyAttachments.length === 0) return
 
     setReplying(true)
     setError('')
     setSuccess('')
     try {
-      const response = await supportApi.reply(token, ticketId, reply.trim())
+      const response = await supportApi.reply(token, ticketId, {
+        message: reply.trim(),
+        attachments: replyAttachments,
+      })
       setTicket(response.ticket)
       setReply('')
+      setReplyAttachments([])
       setSuccess(response.message)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send reply')
@@ -143,6 +159,7 @@ export default function AccountSupportTicketPage() {
         description={ticket?.lastMessagePreview || seo.description}
         path={`/account/support/${ticketId}`}
         keywords={[...seo.keywords]}
+        noindex
         jsonLd={breadcrumbJsonLd([
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },
@@ -257,7 +274,8 @@ export default function AccountSupportTicketPage() {
                       <div className="account-support-conversation-meta">
                         <span className={statusClass(ticket.status)}>{statusLabel(ticket.status)}</span>
                         <span className="account-support-count-chip">
-                          <strong>{ticket.messages.length}</strong> messages
+                          <strong>{ticket.messages.length}</strong>
+                          <span>messages</span>
                         </span>
                       </div>
                     </div>
@@ -298,7 +316,12 @@ export default function AccountSupportTicketPage() {
                                     <strong>{authorName}</strong>
                                     <time dateTime={item.createdAt}>{formatChatTime(item.createdAt)}</time>
                                   </header>
-                                  <p>{item.message}</p>
+                                  <p>{item.message === '(Attachment)' ? '' : item.message}</p>
+                                  <SupportMessageAttachments
+                                    attachments={item.attachments}
+                                    ticketId={ticket.id}
+                                    token={token}
+                                  />
                                 </div>
                                 {!isAdmin ? (
                                   <span className="account-support-chat-avatar account-support-chat-avatar--user" aria-hidden="true">
@@ -319,17 +342,25 @@ export default function AccountSupportTicketPage() {
                           <textarea
                             className="account-support-input account-support-textarea account-support-composer-input"
                             rows={3}
-                            required
                             value={reply}
                             placeholder="Type your message to support..."
                             onChange={(event) => setReply(event.target.value)}
                           />
                         </label>
+                        <SupportAttachmentField
+                          files={replyAttachments}
+                          onChange={setReplyAttachments}
+                          disabled={replying}
+                        />
                         <div className="account-support-composer-actions">
                           <p className="account-support-composer-hint">
                             Replies are visible to our support team in this ticket thread.
                           </p>
-                          <button type="submit" className="btn btn-primary" disabled={replying || !reply.trim()}>
+                          <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={replying || (!reply.trim() && replyAttachments.length === 0)}
+                          >
                             <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />
                             {replying ? 'Sending...' : 'Send reply'}
                           </button>

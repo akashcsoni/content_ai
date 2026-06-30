@@ -23,6 +23,8 @@ export const services: Service[] = [
       'Bring your own AI API keys — full control over cost and provider',
       'Topic research, outlines, and full draft generation in one flow',
       'Custom tone, length, and keyword targeting',
+      'Intelligent internal links to your existing posts',
+      'SEO optimization pass with score, fixes, and JSON-LD schema',
       'Export-ready markdown or HTML for any CMS',
       'Batch generation for content calendars',
     ],
@@ -48,17 +50,19 @@ export const services: Service[] = [
   {
     id: 'seo-optimization',
     title: 'SEO Optimization',
-    shortDescription: 'Keyword research and on-page SEO suggestions.',
+    shortDescription: 'Built into Auto Blog — scoring, fixes, and schema on every draft.',
     description:
-      'Improve discoverability with keyword ideas, meta titles, heading structure, and on-page recommendations baked into your workflow.',
+      'Every blog generation includes on-page SEO scoring, metadata optimization, search intent mapping, secondary keywords, and BlogPosting JSON-LD — no extra credits required.',
     features: [
-      'Keyword research and search intent mapping',
-      'Meta title and description generation',
-      'On-page SEO scoring and suggestions',
+      'Auto SEO score out of 100 on every generated post',
+      'Meta title, description, and keyword optimization pass',
+      'Search intent + secondary keyword suggestions',
+      'BlogPosting JSON-LD schema export',
+      'Included with Auto Blog generation',
     ],
     icon: 'seo',
-    available: false,
-    creditCost: 1,
+    available: true,
+    creditCost: 0,
   },
   {
     id: 'content-repurpose',
@@ -111,8 +115,17 @@ export function getServiceById(id: string): Service | undefined {
   return services.find((service) => service.id === id)
 }
 
-/** Services that are live on the product (excludes coming-soon placeholders). */
-export const liveServices = services.filter((service) => service.available)
+/** Services hidden from marketing pages and account service pickers (still in catalog for routing/admin). */
+export const FRONTEND_HIDDEN_SERVICE_IDS = new Set(['seo-optimization'])
+
+export function isFrontendPublicService(service: Pick<Service, 'id' | 'available'>): boolean {
+  if (!service.available) return false
+  if (FRONTEND_HIDDEN_SERVICE_IDS.has(service.id)) return false
+  return true
+}
+
+/** Services that are live on the product (excludes coming-soon placeholders and front-hidden items). */
+export const liveServices = services.filter(isFrontendPublicService)
 
 export const servicesStats = [
   { value: String(liveServices.length), label: 'Content tools' },
@@ -133,5 +146,8 @@ export function getServiceInitials(title: string): string {
 }
 
 export function getServiceAccountPath(id: string): string {
+  if (id === 'seo-optimization') {
+    return '/account/services/auto-blog?tab=settings'
+  }
   return `/account/services/${id}`
 }

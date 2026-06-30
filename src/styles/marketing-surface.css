@@ -1,0 +1,374 @@
+/**
+ * Rocket-inspired marketing surfaces — layout/sections unchanged, visual layer only.
+ * Scoped to public site (not account shell).
+ */
+
+.site-shell:not(.site-shell--account) {
+  background: var(--bg);
+}
+
+/* ——— Header ——— */
+.site-shell:not(.site-shell--account) .header-topbar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-shell:not(.site-shell--account) .header-topbar p {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.site-shell:not(.site-shell--account) .header-main {
+  background: var(--bg);
+  backdrop-filter: none;
+}
+
+.site-shell:not(.site-shell--account) .site-header--scrolled .header-main {
+  box-shadow: none;
+  border-bottom-color: var(--border);
+}
+
+.site-shell:not(.site-shell--account) .header-nav-link {
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.site-shell:not(.site-shell--account) .header-nav-link:hover {
+  background: transparent;
+  color: var(--text-h);
+  opacity: 0.65;
+}
+
+.site-shell:not(.site-shell--account) .header-nav-link.active {
+  background: transparent;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+/* ——— Shared eyebrows ——— */
+.site-shell:not(.site-shell--account) .home-eyebrow,
+.site-shell:not(.site-shell--account) .pricing-eyebrow,
+.site-shell:not(.site-shell--account) .faq-eyebrow,
+.site-shell:not(.site-shell--account) .about-eyebrow,
+.site-shell:not(.site-shell--account) .services-eyebrow,
+.site-shell:not(.site-shell--account) .contact-eyebrow {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.site-shell:not(.site-shell--account) .home-eyebrow--plain,
+.site-shell:not(.site-shell--account) .pricing-eyebrow--plain,
+.site-shell:not(.site-shell--account) .about-eyebrow--plain {
+  color: var(--text-muted);
+}
+
+/* ——— Page heroes ——— */
+.site-shell:not(.site-shell--account) .home-hero,
+.site-shell:not(.site-shell--account) .pricing-hero,
+.site-shell:not(.site-shell--account) .faq-hero,
+.site-shell:not(.site-shell--account) .about-hero,
+.site-shell:not(.site-shell--account) .services-hero,
+.site-shell:not(.site-shell--account) .contact-hero,
+.site-shell:not(.site-shell--account) .status-hero {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-shell:not(.site-shell--account) .home-hero {
+  padding: 2.75rem 0 2rem;
+}
+
+.site-shell:not(.site-shell--account) .home-hero::before {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent 92%);
+  opacity: 1;
+}
+
+.site-shell:not(.site-shell--account) .pricing-hero,
+.site-shell:not(.site-shell--account) .faq-hero,
+.site-shell:not(.site-shell--account) .about-hero {
+  background: var(--bg);
+}
+
+/* ——— Trust / logo strip ——— */
+.site-shell:not(.site-shell--account) .home-trust {
+  background: var(--bg-soft);
+  border-block-color: var(--border);
+}
+
+.site-shell:not(.site-shell--account) .home-trust p {
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.site-shell:not(.site-shell--account) .home-trust-list li {
+  color: var(--text-muted);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* ——— Grid panels (Rocket windowpane) ——— */
+.site-shell:not(.site-shell--account) .home-stats-grid,
+.site-shell:not(.site-shell--account) .home-steps,
+.site-shell:not(.site-shell--account) .home-benefits-grid,
+.site-shell:not(.site-shell--account) .home-service-grid,
+.site-shell:not(.site-shell--account) .pricing-plans-grid,
+.site-shell:not(.site-shell--account) .pricing-steps,
+.site-shell:not(.site-shell--account) .about-values-grid,
+.site-shell:not(.site-shell--account) .about-audience-grid {
+  gap: 0;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.site-shell:not(.site-shell--account) .home-stat,
+.site-shell:not(.site-shell--account) .home-step,
+.site-shell:not(.site-shell--account) .home-benefit,
+.site-shell:not(.site-shell--account) .home-service-grid .service-card,
+.site-shell:not(.site-shell--account) .pricing-plan-card,
+.site-shell:not(.site-shell--account) .pricing-step,
+.site-shell:not(.site-shell--account) .about-value-card,
+.site-shell:not(.site-shell--account) .about-audience-card {
+  border-radius: 0;
+  box-shadow: none;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  transform: none;
+}
+
+.site-shell:not(.site-shell--account) .home-benefit:hover,
+.site-shell:not(.site-shell--account) .about-value-card:hover {
+  transform: none;
+  background: var(--bg-soft);
+}
+
+.site-shell:not(.site-shell--account) .home-stats-grid .home-stat:nth-child(4n),
+.site-shell:not(.site-shell--account) .home-benefits-grid .home-benefit:nth-child(4n),
+.site-shell:not(.site-shell--account) .home-steps .home-step:nth-child(3n),
+.site-shell:not(.site-shell--account) .home-service-grid .service-card:nth-child(3n),
+.site-shell:not(.site-shell--account) .pricing-plans-grid .pricing-plan-card:nth-child(2n),
+.site-shell:not(.site-shell--account) .pricing-steps .pricing-step:nth-child(3n),
+.site-shell:not(.site-shell--account) .about-values-grid .about-value-card:nth-child(4n),
+.site-shell:not(.site-shell--account) .about-audience-grid .about-audience-card:nth-child(3n) {
+  border-right: 0;
+}
+
+@media (max-width: 1024px) {
+  .site-shell:not(.site-shell--account) .home-stats-grid .home-stat:nth-child(4n),
+  .site-shell:not(.site-shell--account) .home-benefits-grid .home-benefit:nth-child(4n),
+  .site-shell:not(.site-shell--account) .home-steps .home-step:nth-child(3n),
+  .site-shell:not(.site-shell--account) .home-service-grid .service-card:nth-child(3n),
+  .site-shell:not(.site-shell--account) .about-values-grid .about-value-card:nth-child(4n),
+  .site-shell:not(.site-shell--account) .about-audience-grid .about-audience-card:nth-child(3n) {
+    border-right: 1px solid var(--border);
+  }
+
+  .site-shell:not(.site-shell--account) .home-stats-grid .home-stat:nth-child(2n),
+  .site-shell:not(.site-shell--account) .home-benefits-grid .home-benefit:nth-child(2n),
+  .site-shell:not(.site-shell--account) .home-steps .home-step:nth-child(2n),
+  .site-shell:not(.site-shell--account) .home-service-grid .service-card:nth-child(2n),
+  .site-shell:not(.site-shell--account) .about-values-grid .about-value-card:nth-child(2n),
+  .site-shell:not(.site-shell--account) .about-audience-grid .about-audience-card:nth-child(2n) {
+    border-right: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-shell:not(.site-shell--account) .home-stat,
+  .site-shell:not(.site-shell--account) .home-step,
+  .site-shell:not(.site-shell--account) .home-benefit,
+  .site-shell:not(.site-shell--account) .home-service-grid .service-card,
+  .site-shell:not(.site-shell--account) .pricing-plan-card,
+  .site-shell:not(.site-shell--account) .pricing-step,
+  .site-shell:not(.site-shell--account) .about-value-card,
+  .site-shell:not(.site-shell--account) .about-audience-card {
+    border-right: 0;
+  }
+}
+
+/* ——— Featured / panels ——— */
+.site-shell:not(.site-shell--account) .home-mockup,
+.site-shell:not(.site-shell--account) .home-feature-card,
+.site-shell:not(.site-shell--account) .about-hero-panel,
+.site-shell:not(.site-shell--account) .pricing-plan-card--featured,
+.site-shell:not(.site-shell--account) .pricing-credit-card--popular {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  background: var(--bg);
+}
+
+.site-shell:not(.site-shell--account) .home-mockup-glow {
+  display: none;
+}
+
+.site-shell:not(.site-shell--account) .home-feature {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-shell:not(.site-shell--account) .home-section--soft,
+.site-shell:not(.site-shell--account) .pricing-section--soft,
+.site-shell:not(.site-shell--account) .about-section--soft,
+.site-shell:not(.site-shell--account) .services-section--soft {
+  background: var(--bg-soft);
+}
+
+/* ——— Section headers ——— */
+.site-shell:not(.site-shell--account) .home-section-header h2,
+.site-shell:not(.site-shell--account) .pricing-section-head h2,
+.site-shell:not(.site-shell--account) .about-section-head h2,
+.site-shell:not(.site-shell--account) .services-section-head h2 {
+  letter-spacing: -0.035em;
+}
+
+/* ——— FAQ accordion (Rocket divider style) ——— */
+.site-shell:not(.site-shell--account) .faq-accordion {
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.site-shell:not(.site-shell--account) .faq-item {
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0.25rem;
+  background: transparent;
+}
+
+.site-shell:not(.site-shell--account) .faq-category-head h2 {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.site-shell:not(.site-shell--account) .faq-search {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.site-shell:not(.site-shell--account) .faq-filter.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ——— CTA bands ——— */
+.site-shell:not(.site-shell--account) .home-cta-inner,
+.site-shell:not(.site-shell--account) .pricing-cta-inner,
+.site-shell:not(.site-shell--account) .faq-cta-inner,
+.site-shell:not(.site-shell--account) .about-cta-inner,
+.site-shell:not(.site-shell--account) .services-cta-inner,
+.site-shell:not(.site-shell--account) .contact-cta-inner {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg-soft);
+  color: var(--text-h);
+}
+
+.site-shell:not(.site-shell--account) .home-cta-inner h2,
+.site-shell:not(.site-shell--account) .pricing-cta-inner h2,
+.site-shell:not(.site-shell--account) .faq-cta-inner h2,
+.site-shell:not(.site-shell--account) .about-cta-inner h2,
+.site-shell:not(.site-shell--account) .services-cta-inner h2 {
+  color: var(--text-h);
+}
+
+.site-shell:not(.site-shell--account) .home-cta-inner p,
+.site-shell:not(.site-shell--account) .pricing-cta-inner p,
+.site-shell:not(.site-shell--account) .faq-cta-inner p,
+.site-shell:not(.site-shell--account) .about-cta-inner p,
+.site-shell:not(.site-shell--account) .services-cta-inner p {
+  color: var(--text);
+}
+
+.site-shell:not(.site-shell--account) .home-cta .btn-primary,
+.site-shell:not(.site-shell--account) .pricing-cta .btn-primary,
+.site-shell:not(.site-shell--account) .faq-cta .btn-primary,
+.site-shell:not(.site-shell--account) .about-cta .btn-primary,
+.site-shell:not(.site-shell--account) .services-cta .btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.site-shell:not(.site-shell--account) .btn-ghost {
+  border-color: var(--border);
+  color: var(--text-h);
+}
+
+.site-shell:not(.site-shell--account) .btn-ghost:hover {
+  background: var(--bg);
+}
+
+/* ——— Text links with arrow ——— */
+.site-shell:not(.site-shell--account) .account-panel-link,
+.site-shell:not(.site-shell--account) .home-feature-copy .btn-secondary,
+.site-shell:not(.site-shell--account) .service-card-link {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* ——— Content icons ——— */
+.site-shell:not(.site-shell--account) .content-icon {
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+  border-color: var(--border);
+}
+
+/* ——— Blog / contact cards ——— */
+.site-shell:not(.site-shell--account) .blog-card,
+.site-shell:not(.site-shell--account) .contact-card,
+.site-shell:not(.site-shell--account) .faq-quick-card {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.site-shell:not(.site-shell--account) .faq-quick-card:hover {
+  transform: none;
+  background: var(--bg-soft);
+}
+
+/* ——— CMS-managed blocks ——— */
+.site-shell:not(.site-shell--account) .site-blocks-eyebrow {
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.site-shell:not(.site-shell--account) .site-blocks-marketing-hero {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.site-shell:not(.site-shell--account) .site-blocks-featured-spotlight,
+.site-shell:not(.site-shell--account) .site-blocks-featured-panel {
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  background: var(--bg);
+}
+
+.site-shell:not(.site-shell--account) .site-blocks-trust-band {
+  background: var(--bg-soft);
+}
+
+.site-shell:not(.site-shell--account) .static-cta-inner {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg-soft);
+  color: var(--text-h);
+}

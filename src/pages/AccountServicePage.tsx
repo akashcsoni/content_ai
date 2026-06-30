@@ -10,7 +10,7 @@ import { getServiceById, getServiceInitials } from '../data/services'
 import SEO from '../components/SEO'
 import { useAuth } from '../context/AuthContext'
 import { formatCreditCostLabel, useServiceCreditCost } from '../context/ServiceCreditsContext'
-import { breadcrumbJsonLd } from '../config/seo'
+import { breadcrumbJsonLd, serviceWorkspaceSeo } from '../config/seo'
 import AutoBlogWorkspace from './account/workspaces/AutoBlogWorkspace'
 import SocialContentWorkspace from './account/workspaces/SocialContentWorkspace'
 import EmailNewsletterWorkspace from './account/workspaces/EmailNewsletterWorkspace'
@@ -25,19 +25,23 @@ export default function AccountServicePage() {
 
   if (!user) return null
   if (!service) return <Navigate to="/account" replace />
+  if (service.id === 'seo-optimization') {
+    return <Navigate to="/account/services/auto-blog?tab=settings" replace />
+  }
   if (!service.available) return <Navigate to="/account" replace />
 
-  const pageTitle = `${service.title} — Content AI`
+  const pageTitle = serviceWorkspaceSeo(service.title, service.shortDescription, service.id)
   const hasCredits = user.credits >= creditCost
   const creditCostLabel = formatCreditCostLabel(creditCost)
 
   return (
     <>
       <SEO
-        title={pageTitle}
-        description={service.shortDescription}
-        path={`/account/services/${service.id}`}
-        keywords={[service.title, 'Content AI workspace', 'AI content tools']}
+        title={pageTitle.title}
+        description={pageTitle.description}
+        path={pageTitle.path}
+        keywords={[...pageTitle.keywords]}
+        noindex
         jsonLd={breadcrumbJsonLd([
           { name: 'Home', path: '/' },
           { name: 'Account', path: '/account' },

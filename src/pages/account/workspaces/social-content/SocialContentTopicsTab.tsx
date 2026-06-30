@@ -17,6 +17,7 @@ import { ApiError, socialContentApi, type SocialContentPostDetail } from '../../
 import { useAuth } from '../../../../context/AuthContext'
 import { formatCreditCostLabel, useServiceCreditCost, useServiceCredits } from '../../../../context/ServiceCreditsContext'
 import ServicePagination from '../auto-blog/ServicePagination'
+import TopicQueueManualAdd, { type TopicQueueEntry } from '../shared/TopicQueueManualAdd'
 import SocialContentPostPreview from './SocialContentPostPreview'
 import {
   formatTopicStatus,
@@ -80,6 +81,7 @@ export default function SocialContentTopicsTab({
   const [loading, setLoading] = useState(true)
   const [generatingTopicId, setGeneratingTopicId] = useState<string | null>(null)
   const [generatingTopics, setGeneratingTopics] = useState(false)
+  const [addingTopics, setAddingTopics] = useState(false)
   const [togglingActive, setTogglingActive] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -157,21 +159,48 @@ export default function SocialContentTopicsTab({
     }
   }
 
-  async function handleAddTopic() {
-    if (!token || !newTopic.trim()) return
+  async function handleAddTopics(entries: TopicQueueEntry[]) {
+    if (!token || entries.length === 0) return
 
+    setAddingTopics(true)
     setError('')
+
+    let added = 0
+    let skipped = 0
+
     try {
-      await socialContentApi.addTopic(token, {
-        topic: newTopic.trim(),
-        categoryId: newTopicCategoryId || null,
-        platform: newTopicPlatform || null,
-      })
+      for (const entry of entries) {
+        try {
+          await socialContentApi.addTopic(token, {
+            topic: entry.topic,
+            categoryId: newTopicCategoryId || null,
+            platform: newTopicPlatform || null,
+          })
+          added += 1
+        } catch (err) {
+          if (err instanceof ApiError && err.message.includes('already in your pending queue')) {
+            skipped += 1
+          } else {
+            throw err
+          }
+        }
+      }
+
       setNewTopic('')
       await loadData()
-      flashSuccess('Topic added')
+      if (added > 0) {
+        flashSuccess(
+          skipped > 0
+            ? `${added} topic${added === 1 ? '' : 's'} added · ${skipped} duplicate${skipped === 1 ? '' : 's'} skipped`
+            : `${added} topic${added === 1 ? '' : 's'} added to queue`,
+        )
+      } else if (skipped > 0) {
+        setError('All topics are already in your pending queue')
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to add topic')
+    } finally {
+      setAddingTopics(false)
     }
   }
 
@@ -353,6 +382,36 @@ export default function SocialContentTopicsTab({
         </p>
       )}
 
+      <TopicQueueManualAdd
+        topic={newTopic}
+        onTopicChange={setNewTopic}
+        categoryId={newTopicCategoryId}
+        onCategoryChange={setNewTopicCategoryId}
+        categories={categories}
+        onAddTopics={handleAddTopics}
+        submitting={addingTopics}
+        placeholder={exampleTopicBrief}
+        platformSlot={
+          <label className="service-topics-manual-field">
+            <span>Platform</span>
+            <select
+              value={newTopicPlatform}
+              disabled={addingTopics}
+              onChange={(event) =>
+                setNewTopicPlatform(event.target.value as SocialPlatform | '')
+              }
+            >
+              <option value="">Default from settings</option>
+              {(Object.keys(platformLabels) as SocialPlatform[]).map((platform) => (
+                <option key={platform} value={platform}>
+                  {platformLabels[platform]}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
+
       <section className="service-logs-panel service-topics-panel" aria-label="Topic queue">
         <nav className="service-logs-tabs" aria-label="Topic filters">
           {topicTabs.map((tab) => (
@@ -394,7 +453,7 @@ export default function SocialContentTopicsTab({
             onClick={() => setShowTopicFilters((current) => !current)}
           >
             <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
-            Add filter
+            Filters & AI
           </button>
 
           <span className="service-logs-count">
@@ -445,59 +504,6 @@ export default function SocialContentTopicsTab({
                 {generatingTopics ? 'Generating...' : 'Generate with AI'}
               </button>
             </div>
-
-            <label className="service-logs-filter-field">
-              <span>New topic</span>
-              <input
-                type="text"
-                value={newTopic}
-                placeholder={exampleTopicBrief}
-                onChange={(event) => setNewTopic(event.target.value)}
-              />
-            </label>
-
-            <label className="service-logs-filter-field">
-              <span>Topic category</span>
-              <select
-                value={newTopicCategoryId}
-                onChange={(event) => setNewTopicCategoryId(event.target.value)}
-              >
-                <option value="">No category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="service-logs-filter-field">
-              <span>Platform</span>
-              <select
-                value={newTopicPlatform}
-                onChange={(event) =>
-                  setNewTopicPlatform(event.target.value as SocialPlatform | '')
-                }
-              >
-                <option value="">Default from settings</option>
-                {(Object.keys(platformLabels) as SocialPlatform[]).map((platform) => (
-                  <option key={platform} value={platform}>
-                    {platformLabels[platform]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="service-logs-filter-actions">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={!newTopic.trim() || !canUseWorkspace}
-                onClick={() => void handleAddTopic()}
-              >
-                Add topic
-              </button>
-            </div>
           </div>
         )}
 
@@ -510,7 +516,7 @@ export default function SocialContentTopicsTab({
               <span>
                 {topicSearch.trim()
                   ? 'Try a different search or filter.'
-                  : 'Generate topics with AI or add one manually using Add filter.'}
+                  : 'Add topics manually above or generate them with AI using Filters & AI.'}
               </span>
             </div>
           ) : (

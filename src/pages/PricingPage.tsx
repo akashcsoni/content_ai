@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
-import SEO from '../components/SEO'
-import { breadcrumbJsonLd, pageSeo } from '../config/seo'
+import ManagedPageContent from '../components/ManagedPageContent'
 import {
   creditExamples,
   creditSteps,
@@ -10,21 +9,15 @@ import {
 import '../styles/pricing.css'
 
 export default function PricingPage() {
-  const seo = pageSeo.pricing
-
   return (
-    <>
-      <SEO
-        title={seo.title}
-        description={seo.description}
-        path={seo.path}
-        keywords={[...seo.keywords]}
-        jsonLd={breadcrumbJsonLd([
-          { name: 'Home', path: '/' },
-          { name: 'Pricing', path: '/pricing' },
-        ])}
-      />
-
+    <ManagedPageContent
+      pageKey="pricing"
+      breadcrumbItems={[
+        { name: 'Home', path: '/' },
+        { name: 'Pricing', path: '/pricing' },
+      ]}
+      replace
+    >
       <div className="pricing-page">
         <section className="pricing-hero" aria-labelledby="pricing-heading">
           <div className="pricing-container">
@@ -175,6 +168,6 @@ export default function PricingPage() {
           </div>
         </section>
       </div>
-    </>
+    </ManagedPageContent>
   )
 }
